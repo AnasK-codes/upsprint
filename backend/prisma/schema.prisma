@@ -10,8 +10,33 @@ model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   password  String
-  name      String?
-  batch     String?
-  branch    String?
+  name      String
+  batch     String
+  branch    String
   createdAt DateTime @default(now())
+
+  accounts LinkedAccount[]
+}
+
+model LinkedAccount {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  platform  String
+  username  String
+  createdAt DateTime @default(now())
+
+  user      User               @relation(fields: [userId], references: [id])
+  snapshots PlatformSnapshot[]
+}
+
+model PlatformSnapshot {
+  id              Int      @id @default(autoincrement())
+  linkedAccountId Int
+  rating          Int?
+  rankTitle       String? 
+  problemsSolved  Int?
+  rawData         Json
+  createdAt       DateTime @default(now())
+
+  linkedAccount LinkedAccount @relation(fields: [linkedAccountId], references: [id])
 }
