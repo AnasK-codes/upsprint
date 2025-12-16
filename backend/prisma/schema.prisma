@@ -33,10 +33,18 @@ model PlatformSnapshot {
   id              Int      @id @default(autoincrement())
   linkedAccountId Int
   rating          Int?
-  rankTitle       String? 
+  rankTitle       String?
   problemsSolved  Int?
   rawData         Json
   createdAt       DateTime @default(now())
 
   linkedAccount LinkedAccount @relation(fields: [linkedAccountId], references: [id])
+}
+
+model JobRun {
+  id        Int      @id @default(autoincrement())
+  jobName   String
+  status    String // "success" | "failed"
+  message   String?
+  createdAt DateTime @default(now())
 }
