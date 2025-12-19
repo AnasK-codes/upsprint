@@ -40,6 +40,9 @@ model PlatformSnapshot {
   createdAt       DateTime @default(now())
 
   linkedAccount LinkedAccount @relation(fields: [linkedAccountId], references: [id])
+
+  @@index([linkedAccountId, createdAt])
+  @@index([createdAt])
 }
 
 model JobRun {

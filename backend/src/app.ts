@@ -11,6 +11,7 @@ import userRoutes from "./routes/user.routes.js";
 import errorHandler from "./middleware/error.middleware.js";
 import { apiLimiter } from "./middleware/rateLimit.middleware.js";
 import adminRoutes from "./routes/admin.routes.js";
+import { getMetricsText } from "./utils/metrics.js";
 
 const app = express();
 console.log("Database URL:", process.env.DATABASE_URL);
@@ -20,15 +21,21 @@ app.use(express.json());
 app.use(errorHandler);
 app.use(apiLimiter);
 
-// Sample route
-app.get("/", (_req, res) => {
-  res.send("Hello, World!");
-});
+
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/platforms", platformRoutes);
 app.use("/snapshots", snapshotRoutes);
 app.use("/leaderboard", leaderboardRoutes);
 app.use("/admin", adminRoutes);
+
+// Sample route
+app.get("/", (_req, res) => {
+  res.send("Hello, World!");
+});
+app.get("/metrics", (_req, res) => {
+  res.setHeader("Content-Type", "text/plain; version=0.0.4");
+  res.send(getMetricsText());
+});
 
 export default app;
