@@ -53,14 +53,99 @@ export async function fetchLatestSnapshotsWithAccountUser(): Promise<
  * Normalize rating (0..1) and compute a scaled score (0..1000*weight).
  * Keep this simple and deterministic.
  */
-export function normalizeRating(platform: string, rawData: any): number {
-  const rating = rawData?.rating ?? rawData?.maxRating ?? 0;
-  const max = platform === "codeforces" ? 4000 : 3000;
-  if (!rating) return 0;
-  return Math.min(1, rating / max);
+export function normalizeRating(platform: string, ratingValue: number): number {
+  let max = 3000;
+  if (platform.toLowerCase() === "codeforces") max = 4000;
+  else if (platform.toLowerCase() === "codechef") max = 3500;
+
+  if (!ratingValue) return 0;
+  return Math.min(1, ratingValue / max);
 }
 
-export function computeScore(platform: string, rawData: any, weight = 1) {
-  const normalized = normalizeRating(platform, rawData ?? {});
+export function computeScore(platform: string, ratingValue: number | null | undefined, weight = 1) {
+  const rating = ratingValue ?? 0;
+  const normalized = normalizeRating(platform, rating);
   return normalized * weight * 1000;
+}
+
+export async function getLeetCodeLeaderboard(page = 1, limit = 50) {
+  const skip = (page - 1) * limit;
+
+  // Fetch latest LeetCode snapshots
+  // We need to join User to get name/avatar
+  // ordering by rating desc, then problemsSolved desc
+  const rows = await prisma.$queryRaw`
+    SELECT
+      u.id as "userId",
+      u.name,
+      u."avatarUrl",
+      ps.rating,
+      ps."problemsSolved",
+      ps."rankTitle",
+      la.username as "handle"
+    FROM "PlatformSnapshot" ps
+    JOIN "LinkedAccount" la ON la.id = ps."linkedAccountId"
+    JOIN "User" u ON u.id = la."userId"
+    JOIN (
+      SELECT "linkedAccountId", MAX("createdAt") AS maxc
+      FROM "PlatformSnapshot"
+      GROUP BY "linkedAccountId"
+    ) latest
+      ON ps."linkedAccountId" = latest."linkedAccountId"
+      AND ps."createdAt" = latest.maxc
+    WHERE la.platform = 'leetcode'
+    ORDER BY ps.rating DESC NULLS LAST, ps."problemsSolved" DESC NULLS LAST
+    OFFSET ${skip}
+    LIMIT ${limit}
+  `;
+
+
+
+  // Map to LeaderboardEntry structure expected by frontend
+  const mapped = (rows as any[]).map((row, index) => ({
+    id: row.userId, // Use userId as the row ID
+    rank: skip + index + 1,
+    score: row.rating || 0,
+    user: {
+      id: row.userId,
+      name: row.name || row.handle || "Unknown",
+    },
+  }));
+
+  return mapped;
+}
+
+export async function getDailyActivityLeaderboard(page = 1, limit = 50) {
+  const skip = (page - 1) * limit;
+
+  // Fetch LeetCode accounts ordered by streak
+  const rows = await prisma.linkedAccount.findMany({
+    where: {
+      platform: "leetcode",
+      totalActiveDays: { gt: 0 }
+    },
+    orderBy: [
+      { currentStreak: "desc" },
+      { totalActiveDays: "desc" }
+    ],
+    skip,
+    take: limit,
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          avatarUrl: true
+        }
+      }
+    }
+  });
+
+  return rows.map((row, index) => ({
+    rank: skip + index + 1,
+    user: row.user,
+    currentStreak: row.currentStreak,
+    totalActiveDays: row.totalActiveDays,
+    lastActivityDate: row.lastActivityDate
+  }));
 }

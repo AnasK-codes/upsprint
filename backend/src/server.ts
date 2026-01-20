@@ -1,8 +1,8 @@
 import "./env.js";
 import app from "./app.js";
-import { startCronJobs } from "./config/cron.js";
+import { startCronJobs } from "./jobs/scheduler.js";
 
-const PORT = process.env.PORT || 3000;
+const PORT = 4000;
 
 
 app.listen(PORT, () => {

@@ -36,7 +36,8 @@ export async function rebuildLeaderboard() {
     for (const s of latest) {
       const platform = s.platform ?? s.rawData?.platform ?? "codeforces";
       const weight = PLATFORM_WEIGHTS[platform] ?? 1;
-      const score = computeScore(platform, s.rawData ?? {}, weight);
+
+      const score = computeScore(platform, s.rating, weight);
       scoreMap.set(s.userId, (scoreMap.get(s.userId) ?? 0) + score);
     }
 

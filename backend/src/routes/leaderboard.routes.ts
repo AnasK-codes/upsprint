@@ -1,10 +1,88 @@
 import { Router } from "express";
 import prisma from "../config/db.js";
 import { rebuildLeaderboard } from "../jobs/leaderboard.job.js";
+import { getLeetCodeLeaderboard, getDailyActivityLeaderboard } from "../services/leaderboard.service.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { getCache, setCache } from "../utils/cache.js";
 
 const router = Router();
+
+
+router.get("/ping", (req, res) => res.json({ pong: true }));
+
+/**
+ * GET /leaderboard/daily-activity
+ */
+router.get("/daily-activity", async (req, res) => {
+  try {
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Number(req.query.limit) || 50);
+
+    const data = await getDailyActivityLeaderboard(page, limit);
+    res.json({ page, limit, data });
+  } catch (err) {
+    console.error("GET /leaderboard/daily-activity error:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+/**
+ * GET /leaderboard/daily-activity/top/:n
+ */
+router.get("/daily-activity/top/:n", async (req, res) => {
+  try {
+    const n = Math.min(100, Number(req.params.n) || 10);
+    const cacheKey = `leaderboard:daily-activity:top:${n}`;
+
+    const cached = getCache(cacheKey);
+    if (cached) return res.json(cached);
+
+    const data = await getDailyActivityLeaderboard(1, n);
+
+    setCache(cacheKey, data, 60); // 1 min cache
+    res.json(data);
+  } catch (err) {
+    console.error("GET /leaderboard/daily-activity/top error:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+/**
+ * GET /leaderboard/leetcode
+ */
+router.get("/leetcode", async (req, res) => {
+  try {
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Number(req.query.limit) || 50);
+
+    const data = await getLeetCodeLeaderboard(page, limit);
+    res.json({ page, limit, data });
+  } catch (err) {
+    console.error("GET /leaderboard/leetcode error:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+/**
+ * GET /leaderboard/leetcode/top/:n
+ */
+router.get("/leetcode/top/:n", async (req, res) => {
+  try {
+    const n = Math.min(100, Number(req.params.n) || 10);
+    const cacheKey = `leaderboard:leetcode:top:${n}`;
+
+    const cached = getCache(cacheKey);
+    if (cached) return res.json(cached);
+
+    const data = await getLeetCodeLeaderboard(1, n);
+
+    setCache(cacheKey, data, 60); // 1 min cache
+    res.json(data);
+  } catch (err) {
+    console.error("GET /leaderboard/leetcode/top error:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 /**
  * GET /leaderboard?page=1&limit=50
@@ -88,5 +166,6 @@ router.post("/rebuild", authenticate, async (_req, res) => {
     res.status(500).json({ message: "Rebuild failed" });
   }
 });
+
 
 export default router;

@@ -27,11 +27,17 @@ export const register = async (req: Request, res: Response) => {
         branch,
       },
     });
-    res.status(201).json({ message: "Internal Server Error" });
+    res.status(201).json({ message: "User created successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
+};
+
+export const generateToken = (userId: number | string) => {
+  return jwt.sign({ userId }, process.env.JWT_SECRET!, {
+    expiresIn: "7d",
+  });
 };
 
 export const login = async (req: any, res: any) => {
@@ -50,17 +56,17 @@ export const login = async (req: any, res: any) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    if (!user.password) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_SECRET!,
-      { expiresIn: "7d" }
-    );
+    const token = generateToken(user.id);
 
     res.json({
       message: "Login successful",
