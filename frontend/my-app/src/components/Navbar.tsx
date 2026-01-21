@@ -2,41 +2,27 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 import AnimatedButton from "./AnimatedButton";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
-  const router = useRouter();
   const pathname = usePathname();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isAuthenticated, logout, loading } = useAuth();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const checkLogin = () => {
-      const token = localStorage.getItem("token");
-      setIsLoggedIn(!!token);
-    };
-
-    checkLogin();
-    window.addEventListener("storage", checkLogin);
-    return () => window.removeEventListener("storage", checkLogin);
   }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsLoggedIn(false);
-    router.push("/");
-  };
 
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Leaderboard", href: "/leaderboard" },
   ];
 
-  if (isLoggedIn) {
+  if (isAuthenticated) {
     navLinks.push({ name: "Profile", href: "/profile" });
   }
 
@@ -94,28 +80,24 @@ export default function Navbar() {
 
         {/* Auth Section */}
         <div className="flex-shrink-0 pr-1">
-          {mounted ? (
-            isLoggedIn ? (
+          {mounted && !loading ? (
+            isAuthenticated ? (
               <div className="flex items-center gap-2">
                 <AnimatedButton
                   variant="ghost"
-                  onClick={handleLogout}
+                  onClick={logout}
                   className="px-3 py-1.5 text-xs h-auto min-h-0 text-red-500 hover:text-red-700 hover:bg-red-50"
                 >
                   Logout
                 </AnimatedButton>
               </div>
             ) : (
-              <a
-                href={
-                  process.env.NEXT_PUBLIC_API_BASE_URL
-                    ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/google`
-                    : "http://localhost:4000/auth/google"
-                }
+              <Link
+                href="/login"
                 className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-xs font-bold uppercase tracking-wider rounded-full hover:bg-gray-800 transition-colors shadow-sm no-underline"
               >
                 Login
-              </a>
+              </Link>
             )
           ) : (
             <div className="w-16 h-8 bg-gray-100 rounded-full animate-pulse" />

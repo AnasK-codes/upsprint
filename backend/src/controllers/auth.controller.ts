@@ -3,6 +3,13 @@ import bcrypt from "bcrypt";
 import prisma from "../config/db.js";
 import jwt from "jsonwebtoken";
 
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+};
+
 export const register = async (req: Request, res: Response) => {
   try {
     const { email, password, name, batch, branch } = req.body;
@@ -14,7 +21,7 @@ export const register = async (req: Request, res: Response) => {
       where: { email },
     });
     if (existingUser) {
-      return res.status(409).json({ message: "User already exists" });
+      return res.status(49).json({ message: "User already exists" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -27,7 +34,11 @@ export const register = async (req: Request, res: Response) => {
         branch,
       },
     });
-    res.status(201).json({ message: "User created successfully" });
+
+    const token = generateToken(user.id);
+    res.cookie("token", token, COOKIE_OPTIONS);
+
+    res.status(201).json({ message: "User created successfully", token });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -67,13 +78,28 @@ export const login = async (req: any, res: any) => {
     }
 
     const token = generateToken(user.id);
+    res.cookie("token", token, COOKIE_OPTIONS);
 
     res.json({
       message: "Login successful",
       token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      }
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
   }
+};
+
+export const logout = (req: Request, res: Response) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
+  res.json({ message: "Logged out successfully" });
 };

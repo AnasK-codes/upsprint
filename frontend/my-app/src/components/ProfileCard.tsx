@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { UserProfile } from "@/services/api";
@@ -6,10 +8,19 @@ import { clsx } from "clsx";
 
 interface ProfileCardProps {
   user: UserProfile;
+  stats?: {
+    rank: number;
+    score: number;
+    streak: number;
+  };
   onUpdate: (data: Partial<UserProfile>) => Promise<void>;
 }
 
-export default function ProfileCard({ user, onUpdate }: ProfileCardProps) {
+export default function ProfileCard({
+  user,
+  stats,
+  onUpdate,
+}: ProfileCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -169,7 +180,9 @@ export default function ProfileCard({ user, onUpdate }: ProfileCardProps) {
                   Rank
                 </span>
               </div>
-              <div className="text-2xl font-black text-gray-900">#42</div>
+              <div className="text-2xl font-black text-gray-900">
+                {stats?.rank ? `#${stats.rank}` : "--"}
+              </div>
             </div>
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-2xl border border-blue-100">
               <div className="flex items-center gap-2 mb-1">
@@ -178,7 +191,9 @@ export default function ProfileCard({ user, onUpdate }: ProfileCardProps) {
                   Score
                 </span>
               </div>
-              <div className="text-2xl font-black text-gray-900">1250</div>
+              <div className="text-2xl font-black text-gray-900">
+                {stats?.score ?? "--"}
+              </div>
             </div>
             <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-2xl border border-purple-100">
               <div className="flex items-center gap-2 mb-1">
@@ -187,7 +202,9 @@ export default function ProfileCard({ user, onUpdate }: ProfileCardProps) {
                   Streak
                 </span>
               </div>
-              <div className="text-2xl font-black text-gray-900">7 Days</div>
+              <div className="text-2xl font-black text-gray-900">
+                {stats?.streak ? `${stats.streak} Days` : "--"}
+              </div>
             </div>
           </div>
         )}

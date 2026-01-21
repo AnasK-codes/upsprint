@@ -1,3 +1,4 @@
+import { getAuthToken } from "@/utils/auth";
 const API_BASE = "http://localhost:4000";
 
 export interface LeaderboardEntry {
@@ -12,7 +13,6 @@ export interface LeaderboardEntry {
     name: string;
   };
 }
-
 
 export interface LinkedAccount {
   id: number;
@@ -31,24 +31,34 @@ export interface UserProfile {
   accounts: LinkedAccount[];
 }
 
+export interface AuthResponse {
+  message: string;
+  token?: string;
+  user?: UserProfile;
+}
+
+export interface Activity {
+  id: string;
+  type: "solve" | "connection" | "badge_unlock" | "rank_up";
+  title: string;
+  description: string;
+  date: string;
+  timestamp: number;
+}
+
 async function request<T>(
   url: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = localStorage.getItem("token");
-
   const headers: HeadersInit = {
     ...options.headers,
     "Content-Type": "application/json",
   };
 
-  if (token) {
-    (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
-  }
-
   const res = await fetch(`${API_BASE}${url}`, {
     ...options,
     headers,
+    credentials: "include", // Important for cookies
     cache: "no-store",
   });
 
@@ -61,6 +71,23 @@ async function request<T>(
 }
 
 export const api = {
+  login: (data: any) =>
+    request<AuthResponse>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  register: (data: any) =>
+    request<AuthResponse>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  logout: () =>
+    request<{ message: string }>("/auth/logout", {
+      method: "POST",
+    }),
+
   getTopLeaderboard: (n = 10) =>
     request<LeaderboardEntry[]>(`/leaderboard/top/${n}`),
 
@@ -100,4 +127,7 @@ export const api = {
     request<{ message: string }>(`/users/accounts/${accountId}`, {
       method: "DELETE",
     }),
+
+  getUserActivity: () =>
+    request<Activity[]>("/users/activity"),
 };

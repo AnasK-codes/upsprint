@@ -3,6 +3,10 @@ import { runAllSnapshots } from "./snapshot.js";
 import { rebuildLeaderboard } from "./leaderboard.job.js";
 
 export function startCronJobs() {
+  // Run immediately on startup
+  console.log("[CRON] Running initial snapshot job...");
+  runAllSnapshots().then(() => console.log("[CRON] Initial snapshot complete")).catch(err => console.error("[CRON] Initial snapshot failed", err));
+
   // Run snapshots every 6 hours
   cron.schedule("0 */6 * * *", async () => {
     try {

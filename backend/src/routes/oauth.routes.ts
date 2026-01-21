@@ -27,13 +27,18 @@ router.get(
   }),
   (req, res) => {
     const user = req.user as any;
-
     const token = generateToken(user.id);
 
-    // redirect back to frontend with token
-    res.redirect(
-      `${process.env.FRONTEND_URL}/oauth-success?token=${token}`
-    );
+    // Set cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax", // Better for redirect flows and dev
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    // redirect back to frontend home
+    res.redirect(`${process.env.FRONTEND_URL}/`);
   }
 );
 

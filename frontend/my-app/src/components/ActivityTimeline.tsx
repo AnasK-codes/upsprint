@@ -84,7 +84,12 @@ export default function ActivityTimeline({
                 {activity.description}
               </p>
               <div className="text-xs text-gray-400 mt-2 font-medium">
-                {activity.date}
+                {new Date(activity.date).toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </div>
             </div>
           </motion.div>

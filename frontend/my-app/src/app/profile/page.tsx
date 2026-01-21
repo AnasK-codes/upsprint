@@ -10,91 +10,13 @@ import BadgeCard, { Badge } from "../../components/BadgeCard";
 import ActivityTimeline, { Activity } from "../../components/ActivityTimeline";
 import { motion, AnimatePresence } from "framer-motion";
 
-const MOCK_BADGES: Badge[] = [
-  {
-    id: "1",
-    name: "Week Warrior",
-    description: "Maintain a 7-day streak",
-    isUnlocked: true,
-    category: "streak",
-    icon: "🔥",
-  },
-  {
-    id: "2",
-    name: "Problem Solver",
-    description: "Solve 100 problems total",
-    isUnlocked: true,
-    category: "milestone",
-    icon: "🧠",
-  },
-  {
-    id: "3",
-    name: "Top 10",
-    description: "Reach the top 10 leaderboard",
-    isUnlocked: false,
-    category: "rank",
-    icon: "🏆",
-  },
-  {
-    id: "4",
-    name: "Early Bird",
-    description: "Solve a problem before 8 AM",
-    isUnlocked: false,
-    category: "milestone",
-    icon: "🌅",
-  },
-  {
-    id: "5",
-    name: "Connector",
-    description: "Link 2+ platforms",
-    isUnlocked: true,
-    category: "milestone",
-    icon: "🔗",
-  },
-  {
-    id: "6",
-    name: "LeetGod",
-    description: "Solve 500 LeetCode problems",
-    isUnlocked: false,
-    category: "rank",
-    icon: "⚡",
-  },
-];
-
-const MOCK_ACTIVITIES: Activity[] = [
-  {
-    id: "1",
-    type: "badge_unlock",
-    title: "Unlocked 'Week Warrior'",
-    description: "You maintained a 7-day streak!",
-    date: "2 hours ago",
-  },
-  {
-    id: "2",
-    type: "solve",
-    title: "Solved 'Two Sum'",
-    description: "LeetCode - Easy",
-    date: "5 hours ago",
-  },
-  {
-    id: "3",
-    type: "rank_up",
-    title: "Reached Rank #42",
-    description: "You passed @johndoe",
-    date: "1 day ago",
-  },
-  {
-    id: "4",
-    type: "connection",
-    title: "Connected Codeforces",
-    description: "Profile synced successfully",
-    date: "2 days ago",
-  },
-];
-
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [stats, setStats] = useState<
+    { rank: number; score: number; streak: number } | undefined
+  >();
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -114,6 +36,28 @@ export default function ProfilePage() {
       const data = await api.getProfile();
       setUser(data);
       setError(null);
+
+      // Fetch dynamic stats
+      try {
+        const rankData = await api.getUserRank(data.id);
+        if (rankData) {
+          setStats({
+            rank: rankData.rank,
+            score: rankData.score || 0,
+            streak: rankData.currentStreak || 0,
+          });
+        }
+      } catch (e) {
+        // User might not be on leaderboard yet, ignore error
+        // console.error("Failed to fetch rank:", e);
+      }
+
+      try {
+        const activityData = await api.getUserActivity();
+        setActivities(activityData);
+      } catch (e) {
+        console.error("Failed to fetch activity:", e);
+      }
     } catch (err: any) {
       if (
         err.message?.includes("401") ||
@@ -198,10 +142,10 @@ export default function ProfilePage() {
   const platforms = ["codeforces", "leetcode", "codechef"];
 
   return (
-    <div className="min-h-screen bg-gray-50/50 -m-6 p-6">
+    <div className="min-h-screen bg-gray-50/50 pt-24 sm:pt-32 pb-12 px-6">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Profile Card */}
-        <ProfileCard user={user} onUpdate={handleUpdateProfile} />
+        <ProfileCard user={user} stats={stats} onUpdate={handleUpdateProfile} />
 
         {/* Platforms Grid */}
         <div>
@@ -229,29 +173,32 @@ export default function ProfilePage() {
 
         {/* Gamification Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Badges Section */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900 px-2">
-                Badges & Achievements
-              </h2>
-              <span className="text-xs font-semibold bg-indigo-100 text-indigo-600 px-2 py-1 rounded-full">
-                3 / 6 Unlocked
-              </span>
+            <div className="flex items-center justify-between px-2">
+              <h2 className="text-xl font-bold text-gray-900">Live Activity</h2>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {MOCK_BADGES.map((badge) => (
-                <BadgeCard key={badge.id} badge={badge} />
-              ))}
-            </div>
+            {activities.length > 0 ? (
+              <ActivityTimeline activities={activities} />
+            ) : (
+              <div className="p-8 text-center text-gray-500 bg-white/50 rounded-2xl border border-dashed border-gray-200">
+                No recent activity found. Solve some problems!
+              </div>
+            )}
           </div>
 
-          {/* Activity Feed */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900 px-2">
-              Recent Activity
-            </h2>
-            <ActivityTimeline activities={MOCK_ACTIVITIES} />
+          <div className="lg:col-span-1 space-y-4 text-center">
+            {/* Coming Soon badges */}
+            <div className="p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100">
+              <h3 className="font-bold text-indigo-900 mb-2">Badges</h3>
+              <p className="text-sm text-indigo-600 mb-4">
+                Complete challenges to earn badges. Coming soon!
+              </p>
+              <div className="flex justify-center gap-2 opacity-50">
+                <div className="w-10 h-10 rounded-full bg-white/50" />
+                <div className="w-10 h-10 rounded-full bg-white/50" />
+                <div className="w-10 h-10 rounded-full bg-white/50" />
+              </div>
+            </div>
           </div>
         </div>
 

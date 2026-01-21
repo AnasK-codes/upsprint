@@ -89,7 +89,7 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/50 -m-6 p-6">
+    <div className="relative min-h-screen bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/50 pt-24 sm:pt-32 pb-12 px-6">
       <AnimatePresence>
         {showWelcome && (
           <WelcomeAnimation onComplete={() => setShowWelcome(false)} />

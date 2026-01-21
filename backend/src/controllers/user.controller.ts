@@ -219,3 +219,54 @@ export const getAccounts = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const getUserActivity = async (req: AuthRequest, res: Response) => {
+  try {
+    const accounts = await prisma.linkedAccount.findMany({
+      where: { userId: req.userId },
+      select: { id: true, platform: true, username: true, createdAt: true }
+    });
+
+    const accountIds = accounts.map(a => a.id);
+
+    // Fetch daily activities (problems solved)
+    const dailyActivities = await prisma.dailyActivity.findMany({
+      where: { linkedAccountId: { in: accountIds } },
+      orderBy: { date: 'desc' },
+      take: 20
+    });
+
+    // Transform into "Activity" shape
+    const activities = dailyActivities.map(activity => {
+      const account = accounts.find(a => a.id === activity.linkedAccountId);
+      return {
+        id: `daily-${activity.id}`,
+        type: 'solve', // Icon type
+        title: `Solved ${activity.count} problems`,
+        description: `${account?.platform} (${account?.username})`,
+        date: activity.date.toISOString(), // Send ISO date, let frontend format
+        timestamp: activity.date.getTime()
+      };
+    });
+
+    // Also include "Account Connected" events
+    const connectionEvents = accounts.map(account => ({
+      id: `conn-${account.id}`,
+      type: 'connection',
+      title: `Connected ${account.platform}`,
+      description: `Synced as ${account.username}`,
+      date: account.createdAt.toISOString(),
+      timestamp: account.createdAt.getTime()
+    }));
+
+    // Merge and Sort
+    const allActivity = [...activities, ...connectionEvents]
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 20); // Limit to recent 20 items
+
+    res.json(allActivity);
+  } catch (error) {
+    console.error("Get user activity error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

@@ -145,8 +145,40 @@ router.get("/user/:userId", async (req, res) => {
       include: { user: true },
     });
 
-    if (!row) return res.status(404).json({ message: "User not ranked yet" });
-    res.json(row);
+    const accountWithMaxStreak = await prisma.linkedAccount.findFirst({
+      where: { userId },
+      orderBy: { currentStreak: "desc" },
+    });
+    const currentStreak = accountWithMaxStreak?.currentStreak || 0;
+
+    if (!row) {
+      // If user is not yet on the global leaderboard, return partial data if they have connected accounts
+      if (currentStreak > 0) {
+        return res.json({
+          rank: 0, // Not ranked globally yet
+          score: 0,
+          currentStreak,
+          user: { id: userId, name: "User" } // Minimal user
+        });
+      }
+      return res.status(404).json({ message: "User not ranked yet" });
+    }
+
+    console.log(`[DEBUG] Fetching user rank for ${userId}. Found row: ${!!row}`);
+    console.log(`[DEBUG] Max streak for ${userId}: ${currentStreak}`);
+
+    // Explicitly construct object to avoid potential spread issues or hidden properties
+    const responseData = {
+      id: row.id,
+      userId: row.userId,
+      score: row.score,
+      rank: row.rank,
+      updatedAt: row.updatedAt,
+      user: row.user,
+      currentStreak: currentStreak
+    };
+
+    res.json(responseData);
   } catch (err) {
     console.error("GET /leaderboard/user error:", err);
     res.status(500).json({ message: "Internal server error" });

@@ -4,19 +4,15 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion, Variants } from "framer-motion";
 import { ArrowRight, Trophy, Zap, Globe, Code } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Home() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const { isAuthenticated, loading } = useAuth();
 
-  useEffect(() => {
-    setMounted(true);
-    const checkLogin = () => {
-      const token = localStorage.getItem("token");
-      setIsLoggedIn(!!token);
-    };
-    checkLogin();
-  }, []);
+  // We don't need local mounted state as much if we trust loading from useAuth,
+  // but for hydration mismatch avoidance, we can keep a simple mounted check if strictly needed.
+  // However, useAuth loading is initially true, so it serves a similar purpose.
+  // Let's use loading.
 
   const container: Variants = {
     hidden: { opacity: 0 },
@@ -84,7 +80,7 @@ export default function Home() {
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           {/* Only show Login CTA if NOT logged in */}
-          {(!mounted || !isLoggedIn) && (
+          {!loading && !isAuthenticated && (
             <a
               href={
                 process.env.NEXT_PUBLIC_API_BASE_URL
@@ -123,7 +119,7 @@ export default function Home() {
             href="/leaderboard"
             className="px-8 py-5 bg-white text-gray-900 font-bold rounded-full border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm text-lg flex items-center gap-2"
           >
-            {isLoggedIn ? "Go to Leaderboard" : "Explore Leaderboard"}
+            {isAuthenticated ? "Go to Leaderboard" : "Explore Leaderboard"}
             <Globe className="w-5 h-5 text-gray-400" />
           </Link>
         </motion.div>
