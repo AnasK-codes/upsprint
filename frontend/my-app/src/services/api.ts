@@ -91,20 +91,66 @@ export const api = {
   getTopLeaderboard: (n = 10) =>
     request<LeaderboardEntry[]>(`/leaderboard/top/${n}`),
 
-  getLeaderboard: (page = 1, limit = 50) =>
-    request<{ data: LeaderboardEntry[]; page: number; limit: number }>(
-      `/leaderboard?page=${page}&limit=${limit}`
-    ),
+  getLeaderboard: (
+    page = 1,
+    limit = 50,
+    filters?: { batch?: string; branch?: string; platform?: string }
+  ) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    if (filters?.batch && filters.batch !== "All")
+      params.append("batch", filters.batch);
+    if (filters?.branch && filters.branch !== "All")
+      params.append("branch", filters.branch);
+    if (filters?.platform && filters.platform !== "All")
+      params.append("platform", filters.platform);
 
-  getLeetCodeLeaderboard: (page = 1, limit = 50) =>
-    request<{ data: LeaderboardEntry[]; page: number; limit: number }>(
-      `/leaderboard/leetcode?page=${page}&limit=${limit}`
-    ),
+    return request<{ data: LeaderboardEntry[]; page: number; limit: number }>(
+      `/leaderboard?${params.toString()}`
+    );
+  },
 
-  getDailyActivityLeaderboard: (page = 1, limit = 50) =>
-    request<{ data: LeaderboardEntry[]; page: number; limit: number }>(
-      `/leaderboard/daily-activity?page=${page}&limit=${limit}`
-    ),
+  getLeetCodeLeaderboard: (
+    page = 1,
+    limit = 50,
+    filters?: { batch?: string; branch?: string }
+  ) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    if (filters?.batch && filters.batch !== "All")
+      params.append("batch", filters.batch);
+    if (filters?.branch && filters.branch !== "All")
+      params.append("branch", filters.branch);
+
+    return request<{ data: LeaderboardEntry[]; page: number; limit: number }>(
+      `/leaderboard/leetcode?${params.toString()}`
+    );
+  },
+
+  getDailyActivityLeaderboard: (
+    page = 1,
+    limit = 50,
+    filters?: { batch?: string; branch?: string; platform?: string }
+  ) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    if (filters?.batch && filters.batch !== "All")
+      params.append("batch", filters.batch);
+    if (filters?.branch && filters.branch !== "All")
+      params.append("branch", filters.branch);
+    if (filters?.platform && filters.platform !== "All")
+      params.append("platform", filters.platform);
+
+    return request<{ data: LeaderboardEntry[]; page: number; limit: number }>(
+      `/leaderboard/daily-activity?${params.toString()}`
+    );
+  },
 
   getUserRank: (userId: number) =>
     request<LeaderboardEntry>(`/leaderboard/user/${userId}`),

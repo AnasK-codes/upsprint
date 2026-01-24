@@ -1,22 +1,52 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api, LeaderboardEntry } from "@/services/api";
 import LeaderboardTable from "@/components/LeaderboardTable";
 import Skeleton from "@/components/Skeleton";
 import WelcomeAnimation from "@/components/WelcomeAnimation";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 
 export default function LeaderboardPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [activeTab, setActiveTab] = useState<"global" | "leetcode" | "daily">(
     "global",
   );
+
+  const [filters, setFilters] = useState({
+    batch: searchParams.get("batch") || "All",
+    branch: searchParams.get("branch") || "All",
+    platform: searchParams.get("platform") || "All",
+  });
+
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [showWelcome, setShowWelcome] = useState(false);
   const pageSize = 20;
+
+  const updateFilters = (key: keyof typeof filters, value: string) => {
+    const newFilters = { ...filters, [key]: value };
+    setFilters(newFilters);
+    setPage(1);
+
+    // Update URL
+    const params = new URLSearchParams(searchParams);
+    if (value === "All") {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const cache = useRef<{ [key: string]: LeaderboardEntry[] }>({});
 
   useEffect(() => {
     // Check for welcome animation
@@ -27,21 +57,37 @@ export default function LeaderboardPage() {
     }
 
     let isMounted = true;
+
+    // Create a cache key based on current state
+    const cacheKey = `${activeTab}-${page}-${JSON.stringify(filters)}`;
+
+    // Check cache first
+    if (cache.current[cacheKey]) {
+      setData(cache.current[cacheKey]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     let fetcher;
     if (activeTab === "leetcode") {
-      fetcher = api.getLeetCodeLeaderboard(page, pageSize);
+      // Platform filter doesn't apply to LeetCode tab (it's implicit)
+      const { platform, ...restFilters } = filters;
+      fetcher = api.getLeetCodeLeaderboard(page, pageSize, restFilters);
     } else if (activeTab === "daily") {
-      fetcher = api.getDailyActivityLeaderboard(page, pageSize);
+      fetcher = api.getDailyActivityLeaderboard(page, pageSize, filters);
     } else {
-      fetcher = api.getLeaderboard(page, pageSize);
+      fetcher = api.getLeaderboard(page, pageSize, filters);
     }
 
     fetcher
       .then((res) => {
         if (isMounted) {
+          // Update cache
+          cache.current[cacheKey] = res.data;
           setData(res.data);
           setLoading(false);
         }
@@ -59,7 +105,7 @@ export default function LeaderboardPage() {
     return () => {
       isMounted = false;
     };
-  }, [page, activeTab]);
+  }, [page, activeTab, filters]);
 
   const handleNext = () => setPage((p) => p + 1);
   const handlePrev = () => setPage((p) => Math.max(1, p - 1));
@@ -146,6 +192,30 @@ export default function LeaderboardPage() {
               </button>
             ))}
           </div>
+
+          {/* Filters */}
+          <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
+            <FilterDropdown
+              label="Batch"
+              options={["All", "2022", "2023", "2024"]}
+              value={filters.batch}
+              onChange={(val) => updateFilters("batch", val)}
+            />
+            <FilterDropdown
+              label="Branch"
+              options={["All", "CSE", "IT", "ECE", "ME"]}
+              value={filters.branch}
+              onChange={(val) => updateFilters("branch", val)}
+            />
+            {activeTab !== "leetcode" && (
+              <FilterDropdown
+                label="Platform"
+                options={["All", "LeetCode", "Codeforces", "CodeChef"]}
+                value={filters.platform}
+                onChange={(val) => updateFilters("platform", val)}
+              />
+            )}
+          </div>
         </div>
 
         {loading ? (
@@ -192,6 +262,80 @@ export default function LeaderboardPage() {
           </motion.div>
         )}
       </div>
+    </div>
+  );
+}
+
+function FilterDropdown({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: string[];
+  value: string;
+  onChange: (val: string) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+          value !== "All"
+            ? "bg-indigo-100 text-indigo-700 border border-indigo-200"
+            : "bg-white text-gray-600 border border-gray-200 hover:border-gray-300"
+        }`}
+      >
+        <span>
+          {label}: {value}
+        </span>
+        <ChevronDown
+          className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute top-full left-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50 overflow-hidden"
+          >
+            {options.map((option) => (
+              <button
+                key={option}
+                onClick={() => {
+                  onChange(option);
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                  value === option
+                    ? "bg-indigo-50 text-indigo-700 font-medium"
+                    : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

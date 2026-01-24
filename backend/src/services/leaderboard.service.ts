@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import prisma from "../config/db.js";
 
 /**
@@ -68,8 +69,19 @@ export function computeScore(platform: string, ratingValue: number | null | unde
   return normalized * weight * 1000;
 }
 
-export async function getLeetCodeLeaderboard(page = 1, limit = 50) {
+export async function getLeetCodeLeaderboard(
+  page = 1,
+  limit = 50,
+  filters?: { batch?: string; branch?: string }
+) {
   const skip = (page - 1) * limit;
+
+  const batchFilter = filters?.batch
+    ? Prisma.sql`AND u.batch = ${filters.batch}`
+    : Prisma.empty;
+  const branchFilter = filters?.branch
+    ? Prisma.sql`AND u.branch = ${filters.branch}`
+    : Prisma.empty;
 
   // Fetch latest LeetCode snapshots
   // We need to join User to get name/avatar
@@ -94,6 +106,8 @@ export async function getLeetCodeLeaderboard(page = 1, limit = 50) {
       ON ps."linkedAccountId" = latest."linkedAccountId"
       AND ps."createdAt" = latest.maxc
     WHERE la.platform = 'leetcode'
+      ${batchFilter}
+      ${branchFilter}
     ORDER BY ps.rating DESC NULLS LAST, ps."problemsSolved" DESC NULLS LAST
     OFFSET ${skip}
     LIMIT ${limit}
@@ -115,14 +129,23 @@ export async function getLeetCodeLeaderboard(page = 1, limit = 50) {
   return mapped;
 }
 
-export async function getDailyActivityLeaderboard(page = 1, limit = 50) {
+export async function getDailyActivityLeaderboard(
+  page = 1,
+  limit = 50,
+  filters?: { batch?: string; branch?: string; platform?: string }
+) {
   const skip = (page - 1) * limit;
+  const platform = filters?.platform?.toLowerCase() || "leetcode";
 
-  // Fetch LeetCode accounts ordered by streak
+  // Fetch accounts ordered by streak
   const rows = await prisma.linkedAccount.findMany({
     where: {
-      platform: "leetcode",
-      totalActiveDays: { gt: 0 }
+      platform: platform === "all" ? undefined : platform,
+      totalActiveDays: { gt: 0 },
+      user: {
+        batch: filters?.batch,
+        branch: filters?.branch,
+      },
     },
     orderBy: [
       { currentStreak: "desc" },

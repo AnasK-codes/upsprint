@@ -19,6 +19,9 @@ model User {
 
   accounts    LinkedAccount[]
   leaderboard Leaderboard?
+  
+  @@index([batch])
+  @@index([branch])
 }
 
 model LinkedAccount {
@@ -34,6 +37,9 @@ model LinkedAccount {
   user      User               @relation(fields: [userId], references: [id])
   snapshots PlatformSnapshot[]
   dailyActivity DailyActivity[]
+
+  @@index([platform])
+  @@index([currentStreak])
 }
 
 model PlatformSnapshot {

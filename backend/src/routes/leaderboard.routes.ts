@@ -1,25 +1,85 @@
 import { Router } from "express";
 import prisma from "../config/db.js";
 import { rebuildLeaderboard } from "../jobs/leaderboard.job.js";
-import { getLeetCodeLeaderboard, getDailyActivityLeaderboard } from "../services/leaderboard.service.js";
+import {
+  getLeetCodeLeaderboard,
+  getDailyActivityLeaderboard,
+} from "../services/leaderboard.service.js";
 import { authenticate } from "../middleware/auth.middleware.js";
-import { getCache, setCache } from "../utils/cache.js";
+import { getCache, setCache, clearCachePrefix } from "../utils/cache.js";
 
 const router = Router();
 
+const VALID_BRANCHES = ["CSE", "IT", "ECE", "ME"];
+const VALID_PLATFORMS = ["leetcode", "codeforces", "codechef"];
+
+const validateFilters = (req: any, res: any, next: any) => {
+  const { batch, branch, platform } = req.query;
+
+  if (batch && batch !== "All") {
+    if (!/^\d{4}$/.test(String(batch))) {
+      return res.status(400).json({ message: "Invalid batch year" });
+    }
+  }
+
+  if (branch && branch !== "All") {
+    if (!VALID_BRANCHES.includes(String(branch))) {
+      return res.status(400).json({ message: "Invalid branch" });
+    }
+  }
+
+  if (platform && platform !== "All" && platform !== "all") {
+    if (!VALID_PLATFORMS.includes(String(platform).toLowerCase())) {
+      return res.status(400).json({ message: "Invalid platform" });
+    }
+  }
+
+  next();
+};
+
+const getCacheKey = (type: string, query: any) => {
+  const { batch, branch, platform } = query;
+  // Bump version to v2 to invalidate old cache
+  const parts = [`leaderboard:v2:${type}`];
+
+  if (batch && batch !== "All") parts.push(`batch=${batch}`);
+  if (branch && branch !== "All") parts.push(`branch=${branch}`);
+  if (platform && platform !== "All" && platform !== "all") parts.push(`platform=${String(platform).toLowerCase()}`);
+
+  // Include page/limit in cache key to avoid collisions
+  const page = query.page || 1;
+  const limit = query.limit || 50;
+  parts.push(`p=${page}:l=${limit}`);
+
+  return parts.join(":");
+};
 
 router.get("/ping", (req, res) => res.json({ pong: true }));
 
 /**
  * GET /leaderboard/daily-activity
  */
-router.get("/daily-activity", async (req, res) => {
+router.get("/daily-activity", validateFilters, async (req, res) => {
   try {
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.min(100, Number(req.query.limit) || 50);
+    const { batch, branch, platform } = req.query;
 
-    const data = await getDailyActivityLeaderboard(page, limit);
-    res.json({ page, limit, data });
+    const cacheKey = getCacheKey("daily-activity", req.query);
+    const cached = getCache(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
+    const data = await getDailyActivityLeaderboard(page, limit, {
+      batch: batch as string,
+      branch: branch as string,
+      platform: platform as string,
+    });
+
+    const response = { page, limit, data };
+    setCache(cacheKey, response, 60); // 1 min cache
+    res.json(response);
   } catch (err) {
     console.error("GET /leaderboard/daily-activity error:", err);
     res.status(500).json({ message: "Internal server error" });
@@ -50,13 +110,26 @@ router.get("/daily-activity/top/:n", async (req, res) => {
 /**
  * GET /leaderboard/leetcode
  */
-router.get("/leetcode", async (req, res) => {
+router.get("/leetcode", validateFilters, async (req, res) => {
   try {
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.min(100, Number(req.query.limit) || 50);
+    const { batch, branch } = req.query;
 
-    const data = await getLeetCodeLeaderboard(page, limit);
-    res.json({ page, limit, data });
+    const cacheKey = getCacheKey("leetcode", req.query);
+    const cached = getCache(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
+    const data = await getLeetCodeLeaderboard(page, limit, {
+      batch: batch as string,
+      branch: branch as string,
+    });
+
+    const response = { page, limit, data };
+    setCache(cacheKey, response, 60);
+    res.json(response);
   } catch (err) {
     console.error("GET /leaderboard/leetcode error:", err);
     res.status(500).json({ message: "Internal server error" });
@@ -87,13 +160,47 @@ router.get("/leetcode/top/:n", async (req, res) => {
 /**
  * GET /leaderboard?page=1&limit=50
  */
-router.get("/", async (req, res) => {
+router.get("/", validateFilters, async (req, res) => {
   try {
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.min(100, Number(req.query.limit) || 50);
     const skip = (page - 1) * limit;
 
+    const { batch, branch, platform } = req.query;
+
+    const cacheKey = getCacheKey("global", req.query);
+    const cached = getCache(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
+    const where: any = {};
+    const userWhere: any = {};
+
+    // safely convert batch to number string if valid
+    if (batch && batch !== "All") {
+      const batchNum = Number(batch);
+      if (!isNaN(batchNum)) {
+        userWhere.batch = String(batchNum);
+      }
+    }
+
+    if (branch && branch !== "All") {
+      userWhere.branch = String(branch);
+    }
+
+    if (platform && platform !== "all" && platform !== "All") {
+      userWhere.accounts = {
+        some: { platform: String(platform).toLowerCase() },
+      };
+    }
+
+    if (Object.keys(userWhere).length > 0) {
+      where.user = userWhere;
+    }
+
     const data = await prisma.leaderboard.findMany({
+      where,
       orderBy: { rank: "asc" },
       skip,
       take: limit,
@@ -102,7 +209,9 @@ router.get("/", async (req, res) => {
       },
     });
 
-    res.json({ page, limit, data });
+    const response = { page, limit, data };
+    setCache(cacheKey, response, 60);
+    res.json(response);
   } catch (err) {
     console.error("GET /leaderboard error:", err);
     res.status(500).json({ message: "Internal server error" });
@@ -164,9 +273,6 @@ router.get("/user/:userId", async (req, res) => {
       return res.status(404).json({ message: "User not ranked yet" });
     }
 
-    console.log(`[DEBUG] Fetching user rank for ${userId}. Found row: ${!!row}`);
-    console.log(`[DEBUG] Max streak for ${userId}: ${currentStreak}`);
-
     // Explicitly construct object to avoid potential spread issues or hidden properties
     const responseData = {
       id: row.id,
@@ -191,6 +297,9 @@ router.get("/user/:userId", async (req, res) => {
  */
 router.post("/rebuild", authenticate, async (_req, res) => {
   try {
+    // Clear all leaderboard caches
+    clearCachePrefix("leaderboard:");
+
     const result = await rebuildLeaderboard();
     res.json({ message: "Leaderboard rebuilt", result });
   } catch (err) {
