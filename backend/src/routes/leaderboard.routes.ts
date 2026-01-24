@@ -10,7 +10,7 @@ import { getCache, setCache, clearCachePrefix } from "../utils/cache.js";
 
 const router = Router();
 
-const VALID_BRANCHES = ["CSE", "IT", "ECE", "ME"];
+const VALID_BRANCHES = ["CSE", "IT", "ECE", "ME", "EE", "CE", "CHE"];
 const VALID_PLATFORMS = ["leetcode", "codeforces", "codechef"];
 
 const validateFilters = (req: any, res: any, next: any) => {

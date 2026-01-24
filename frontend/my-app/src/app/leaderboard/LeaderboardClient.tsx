@@ -197,13 +197,24 @@ export default function LeaderboardPage() {
           <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
             <FilterDropdown
               label="Batch"
-              options={["All", "2022", "2023", "2024"]}
+              options={[
+                "All",
+                "2021",
+                "2022",
+                "2023",
+                "2024",
+                "2025",
+                "2026",
+                "2027",
+                "2028",
+                "2029",
+              ]}
               value={filters.batch}
               onChange={(val) => updateFilters("batch", val)}
             />
             <FilterDropdown
               label="Branch"
-              options={["All", "CSE", "IT", "ECE", "ME"]}
+              options={["All", "CSE", "IT", "ECE", "ME", "EE", "CE", "CHE"]}
               value={filters.branch}
               onChange={(val) => updateFilters("branch", val)}
             />
