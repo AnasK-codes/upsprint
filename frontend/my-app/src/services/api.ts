@@ -37,6 +37,14 @@ export interface AuthResponse {
   user?: UserProfile;
 }
 
+export interface Group {
+  id: number;
+  name: string;
+  description: string | null;
+  code: string;
+  createdAt: string;
+}
+
 export interface Activity {
   id: string;
   type: "solve" | "connection" | "badge_unlock" | "rank_up";
@@ -176,4 +184,15 @@ export const api = {
 
   getUserActivity: () =>
     request<Activity[]>("/users/activity"),
+
+  getUserGroups: () => request<Group[]>("/groups/me"),
+
+  getGroupLeaderboard: (
+    groupId: number,
+    page = 1,
+    limit = 50
+  ) =>
+    request<{ data: LeaderboardEntry[]; page: number; limit: number }>(
+      `/groups/${groupId}/leaderboard?page=${page}&limit=${limit}`
+    ),
 };

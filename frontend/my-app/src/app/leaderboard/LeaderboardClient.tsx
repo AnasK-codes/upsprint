@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { api, LeaderboardEntry } from "@/services/api";
+import { api, LeaderboardEntry, Group } from "@/services/api";
 import LeaderboardTable from "@/components/LeaderboardTable";
 import Skeleton from "@/components/Skeleton";
 import WelcomeAnimation from "@/components/WelcomeAnimation";
@@ -14,9 +14,12 @@ export default function LeaderboardPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState<"global" | "leetcode" | "daily">(
-    "global",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "global" | "leetcode" | "daily" | "groups"
+  >("global");
+
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
 
   const [filters, setFilters] = useState({
     batch: searchParams.get("batch") || "All",
@@ -79,6 +82,13 @@ export default function LeaderboardPage() {
       fetcher = api.getLeetCodeLeaderboard(page, pageSize, restFilters);
     } else if (activeTab === "daily") {
       fetcher = api.getDailyActivityLeaderboard(page, pageSize, filters);
+    } else if (activeTab === "groups") {
+      if (selectedGroupId) {
+        fetcher = api.getGroupLeaderboard(selectedGroupId, page, pageSize);
+      } else {
+        // No group selected yet, just resolve empty
+        fetcher = Promise.resolve({ data: [], page: 1, limit: pageSize });
+      }
     } else {
       fetcher = api.getLeaderboard(page, pageSize, filters);
     }
@@ -105,12 +115,27 @@ export default function LeaderboardPage() {
     return () => {
       isMounted = false;
     };
-  }, [page, activeTab, filters]);
+  }, [page, activeTab, filters, selectedGroupId]);
+
+  // Fetch user groups when entering groups tab
+  useEffect(() => {
+    if (activeTab === "groups" && groups.length === 0) {
+      api
+        .getUserGroups()
+        .then((res) => {
+          setGroups(res);
+          if (res.length > 0 && !selectedGroupId) {
+            setSelectedGroupId(res[0].id);
+          }
+        })
+        .catch((err) => console.error("Failed to fetch groups", err));
+    }
+  }, [activeTab]);
 
   const handleNext = () => setPage((p) => p + 1);
   const handlePrev = () => setPage((p) => Math.max(1, p - 1));
 
-  const handleTabChange = (tab: "global" | "leetcode" | "daily") => {
+  const handleTabChange = (tab: "global" | "leetcode" | "daily" | "groups") => {
     if (activeTab !== tab) {
       setActiveTab(tab);
       setPage(1); // Reset to page 1
@@ -163,12 +188,14 @@ export default function LeaderboardPage() {
               ? "Rankings based only on LeetCode performance."
               : activeTab === "daily"
                 ? "Users ranked by current daily streak."
-                : "See who's currently topping the charts across all platforms."}
+                : activeTab === "groups"
+                  ? "Rankings within your private groups."
+                  : "See who's currently topping the charts across all platforms."}
           </motion.p>
 
           {/* Animated Tabs */}
-          <div className="flex p-1 bg-white/60 backdrop-blur-md border border-gray-200/50 rounded-full shadow-sm relative mt-6">
-            {(["global", "leetcode", "daily"] as const).map((tab) => (
+          <div className="flex p-1 bg-white/60 backdrop-blur-md border border-gray-200/50 rounded-full shadow-sm relative mt-6 overflow-x-auto max-w-full">
+            {(["global", "leetcode", "daily", "groups"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => handleTabChange(tab)}
@@ -227,6 +254,37 @@ export default function LeaderboardPage() {
               />
             )}
           </div>
+
+          {/* Group Selector */}
+          {activeTab === "groups" && (
+            <div className="flex justify-center mt-4">
+              {groups.length > 0 ? (
+                <div className="relative">
+                  <select
+                    value={selectedGroupId || ""}
+                    onChange={(e) => {
+                      setSelectedGroupId(Number(e.target.value));
+                      setPage(1);
+                    }}
+                    className="appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-full leading-tight focus:outline-none focus:bg-white focus:border-indigo-500"
+                  >
+                    {groups.map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <ChevronDown className="h-4 w-4" />
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-500 italic">
+                  You haven't joined any groups yet.
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {loading ? (

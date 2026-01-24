@@ -8,6 +8,7 @@ import authRoutes from "./routes/auth.routes.js";
 import platformRoutes from "./routes/platform.routes.js";
 import snapshotRoutes from "./routes/snapshot.routes.js";
 import leaderboardRoutes from "./routes/leaderboard.routes.js";
+import groupRoutes from "./routes/group.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import errorHandler from "./middleware/error.middleware.js";
 import { apiLimiter } from "./middleware/rateLimit.middleware.js";
@@ -34,6 +35,7 @@ app.use("/users", userRoutes);
 app.use("/platforms", platformRoutes);
 app.use("/snapshots", snapshotRoutes);
 app.use("/leaderboard", leaderboardRoutes);
+app.use("/groups", groupRoutes);
 app.use("/admin", adminRoutes);
 
 app.use(errorHandler);

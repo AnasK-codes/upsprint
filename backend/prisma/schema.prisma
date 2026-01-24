@@ -19,9 +19,35 @@ model User {
 
   accounts    LinkedAccount[]
   leaderboard Leaderboard?
+  groups      GroupMember[]
   
   @@index([batch])
   @@index([branch])
+}
+
+model Group {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  code        String   @unique // For joining via code
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     GroupMember[]
+}
+
+model GroupMember {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  groupId   Int
+  role      String   @default("MEMBER") // ADMIN, MEMBER
+  joinedAt  DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  group     Group    @relation(fields: [groupId], references: [id])
+
+  @@unique([userId, groupId])
+  @@index([groupId])
 }
 
 model LinkedAccount {
