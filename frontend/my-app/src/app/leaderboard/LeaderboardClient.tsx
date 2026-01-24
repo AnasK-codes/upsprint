@@ -6,8 +6,10 @@ import { api, LeaderboardEntry, Group } from "@/services/api";
 import LeaderboardTable from "@/components/LeaderboardTable";
 import Skeleton from "@/components/Skeleton";
 import WelcomeAnimation from "@/components/WelcomeAnimation";
+import GroupManagementModal from "@/components/GroupManagementModal";
+import GroupDetails from "@/components/GroupDetails";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Plus, Users } from "lucide-react";
 
 export default function LeaderboardPage() {
   const router = useRouter();
@@ -20,6 +22,13 @@ export default function LeaderboardPage() {
 
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [metric, setMetric] = useState<
+    | "score"
+    | "activity_7d"
+    | "leetcode_streak"
+    | "total_solved"
+    | "contest_rating"
+  >("score");
 
   const [filters, setFilters] = useState({
     batch: searchParams.get("batch") || "All",
@@ -32,6 +41,7 @@ export default function LeaderboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showGroupModal, setShowGroupModal] = useState(false);
   const pageSize = 20;
 
   const updateFilters = (key: keyof typeof filters, value: string) => {
@@ -62,7 +72,7 @@ export default function LeaderboardPage() {
     let isMounted = true;
 
     // Create a cache key based on current state
-    const cacheKey = `${activeTab}-${page}-${JSON.stringify(filters)}`;
+    const cacheKey = `${activeTab}-${page}-${JSON.stringify(filters)}-${selectedGroupId}-${metric}`;
 
     // Check cache first
     if (cache.current[cacheKey]) {
@@ -84,7 +94,12 @@ export default function LeaderboardPage() {
       fetcher = api.getDailyActivityLeaderboard(page, pageSize, filters);
     } else if (activeTab === "groups") {
       if (selectedGroupId) {
-        fetcher = api.getGroupLeaderboard(selectedGroupId, page, pageSize);
+        fetcher = api.getGroupLeaderboard(
+          selectedGroupId,
+          page,
+          pageSize,
+          metric,
+        );
       } else {
         // No group selected yet, just resolve empty
         fetcher = Promise.resolve({ data: [], page: 1, limit: pageSize });
@@ -115,7 +130,7 @@ export default function LeaderboardPage() {
     return () => {
       isMounted = false;
     };
-  }, [page, activeTab, filters, selectedGroupId]);
+  }, [page, activeTab, filters, selectedGroupId, metric]);
 
   // Fetch user groups when entering groups tab
   useEffect(() => {
@@ -221,71 +236,157 @@ export default function LeaderboardPage() {
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
-            <FilterDropdown
-              label="Batch"
-              options={[
-                "All",
-                "2021",
-                "2022",
-                "2023",
-                "2024",
-                "2025",
-                "2026",
-                "2027",
-                "2028",
-                "2029",
-              ]}
-              value={filters.batch}
-              onChange={(val) => updateFilters("batch", val)}
-            />
-            <FilterDropdown
-              label="Branch"
-              options={["All", "CSE", "IT", "ECE", "ME", "EE", "CE", "CHE"]}
-              value={filters.branch}
-              onChange={(val) => updateFilters("branch", val)}
-            />
-            {activeTab !== "leetcode" && (
+          {activeTab !== "groups" && (
+            <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
               <FilterDropdown
-                label="Platform"
-                options={["All", "LeetCode", "Codeforces", "CodeChef"]}
-                value={filters.platform}
-                onChange={(val) => updateFilters("platform", val)}
+                label="Batch"
+                options={[
+                  "All",
+                  "2021",
+                  "2022",
+                  "2023",
+                  "2024",
+                  "2025",
+                  "2026",
+                  "2027",
+                  "2028",
+                  "2029",
+                ]}
+                value={filters.batch}
+                onChange={(val) => updateFilters("batch", val)}
               />
-            )}
-          </div>
-
-          {/* Group Selector */}
-          {activeTab === "groups" && (
-            <div className="flex justify-center mt-4">
-              {groups.length > 0 ? (
-                <div className="relative">
-                  <select
-                    value={selectedGroupId || ""}
-                    onChange={(e) => {
-                      setSelectedGroupId(Number(e.target.value));
-                      setPage(1);
-                    }}
-                    className="appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-full leading-tight focus:outline-none focus:bg-white focus:border-indigo-500"
-                  >
-                    {groups.map((group) => (
-                      <option key={group.id} value={group.id}>
-                        {group.name}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <ChevronDown className="h-4 w-4" />
-                  </div>
-                </div>
-              ) : (
-                <p className="text-gray-500 italic">
-                  You haven't joined any groups yet.
-                </p>
+              <FilterDropdown
+                label="Branch"
+                options={["All", "CSE", "IT", "ECE", "ME", "EE", "CE", "CHE"]}
+                value={filters.branch}
+                onChange={(val) => updateFilters("branch", val)}
+              />
+              {activeTab !== "leetcode" && (
+                <FilterDropdown
+                  label="Platform"
+                  options={["All", "LeetCode", "Codeforces", "CodeChef"]}
+                  value={filters.platform}
+                  onChange={(val) => updateFilters("platform", val)}
+                />
               )}
             </div>
           )}
+
+          {/* Group Selector & Actions */}
+          {activeTab === "groups" && (
+            <div className="flex flex-col items-center gap-6 mt-6">
+              {groups.length > 0 ? (
+                <div className="w-full max-w-md">
+                  <div className="relative">
+                    <select
+                      value={selectedGroupId || ""}
+                      onChange={(e) => {
+                        setSelectedGroupId(Number(e.target.value));
+                        setPage(1);
+                      }}
+                      className="w-full appearance-none bg-white border border-gray-300 text-gray-700 py-3 px-4 pr-10 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-medium"
+                    >
+                      {groups.map((group) => (
+                        <option key={group.id} value={group.id}>
+                          {group.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                      <ChevronDown className="h-5 w-5" />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="bg-indigo-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <Users className="w-8 h-8 text-indigo-500" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    No Groups Yet
+                  </h3>
+                  <p className="text-gray-500 max-w-xs mx-auto mt-1 mb-6">
+                    Join a group to compete with friends or create your own
+                    private leaderboard.
+                  </p>
+                </div>
+              )}
+
+              <button
+                onClick={() => setShowGroupModal(true)}
+                className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <Plus className="w-4 h-4" />
+                {groups.length > 0
+                  ? "New / Join Group"
+                  : "Create or Join Group"}
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Group Details View */}
+        {activeTab === "groups" && selectedGroupId && (
+          <div className="max-w-4xl mx-auto">
+            {groups.find((g) => g.id === selectedGroupId) && (
+              <GroupDetails
+                group={groups.find((g) => g.id === selectedGroupId)!}
+                onLeave={() => {
+                  // Remove group from local state and select another one if available
+                  const updatedGroups = groups.filter(
+                    (g) => g.id !== selectedGroupId,
+                  );
+                  setGroups(updatedGroups);
+                  setSelectedGroupId(
+                    updatedGroups.length > 0 ? updatedGroups[0].id : null,
+                  );
+                }}
+              />
+            )}
+
+            {/* Metric Selector */}
+            <div className="bg-white p-1 rounded-2xl shadow-sm border border-gray-200/60 flex flex-wrap gap-1 mb-8 overflow-x-auto">
+              {[
+                { id: "score", label: "Global Score", icon: "🏆" },
+                { id: "activity_today", label: "Activity (Today)", icon: "⚡" },
+                { id: "activity_7d", label: "Activity (7d)", icon: "📅" },
+                { id: "leetcode_streak", label: "Streak", icon: "🔥" },
+                { id: "total_solved", label: "Total Solved", icon: "✅" },
+                { id: "contest_rating", label: "Rating", icon: "📈" },
+              ].map((m) => {
+                const isActive = metric === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => setMetric(m.id as any)}
+                    className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex-1 whitespace-nowrap justify-center outline-none ${
+                      isActive
+                        ? "text-white shadow-md transform scale-[1.02]"
+                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeMetric"
+                        className="absolute inset-0 bg-gray-900 rounded-xl"
+                        transition={{
+                          type: "spring",
+                          bounce: 0.15,
+                          duration: 0.5,
+                        }}
+                        style={{ zIndex: 0 }}
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center gap-2">
+                      <span className="text-base">{m.icon}</span>
+                      {m.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="space-y-4">
@@ -304,33 +405,64 @@ export default function LeaderboardPage() {
             transition={{ duration: 0.3 }}
             className="space-y-4"
           >
-            <LeaderboardTable
-              rows={data}
-              type={activeTab === "daily" ? "streak" : "score"}
-            />
+            {/* Show leaderboard if not groups tab OR if groups tab has a selected group */}
+            {(activeTab !== "groups" ||
+              (activeTab === "groups" && selectedGroupId)) && (
+              <>
+                <LeaderboardTable
+                  rows={data}
+                  type={
+                    activeTab === "groups"
+                      ? metric
+                      : activeTab === "daily"
+                        ? "streak"
+                        : "score"
+                  }
+                />
 
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-              <button
-                onClick={handlePrev}
-                disabled={page === 1}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                &larr; Previous
-              </button>
-              <span className="text-sm text-gray-500">
-                Page <span className="font-medium text-gray-900">{page}</span>
-              </span>
-              <button
-                onClick={handleNext}
-                disabled={data.length < pageSize}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Next &rarr;
-              </button>
-            </div>
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                  <button
+                    onClick={handlePrev}
+                    disabled={page === 1}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    &larr; Previous
+                  </button>
+                  <span className="text-sm text-gray-500">
+                    Page{" "}
+                    <span className="font-medium text-gray-900">{page}</span>
+                  </span>
+                  <button
+                    onClick={handleNext}
+                    disabled={data.length < pageSize}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next &rarr;
+                  </button>
+                </div>
+              </>
+            )}
           </motion.div>
         )}
       </div>
+
+      <AnimatePresence>
+        {showGroupModal && (
+          <GroupManagementModal
+            onClose={() => setShowGroupModal(false)}
+            onGroupJoined={() => {
+              // Refresh groups
+              api.getUserGroups().then((res) => {
+                setGroups(res);
+                // Select the newest group (last one)
+                if (res.length > 0) {
+                  setSelectedGroupId(res[res.length - 1].id);
+                }
+              });
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

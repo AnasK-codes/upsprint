@@ -7,7 +7,14 @@ export default function LeaderboardTable({
   type = "score",
 }: {
   rows: LeaderboardEntry[];
-  type?: "score" | "streak";
+  type?:
+    | "score"
+    | "streak"
+    | "activity_7d"
+    | "activity_today"
+    | "leetcode_streak"
+    | "total_solved"
+    | "contest_rating";
 }) {
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -16,7 +23,15 @@ export default function LeaderboardTable({
         <div className="text-center">Rank</div>
         <div>User</div>
         <div className="text-right">
-          {type === "streak" ? "Streak / Days" : "Score"}
+          {type === "streak" || type === "leetcode_streak"
+            ? "Streak"
+            : type === "activity_7d" || type === "activity_today"
+              ? "Activity"
+              : type === "total_solved"
+                ? "Solved"
+                : type === "contest_rating"
+                  ? "Rating"
+                  : "Score"}
         </div>
       </div>
 

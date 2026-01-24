@@ -9,7 +9,14 @@ import Tooltip from "./Tooltip";
 interface LeaderboardRowProps {
   entry: LeaderboardEntry;
   index: number;
-  type?: "score" | "streak";
+  type?:
+    | "score"
+    | "streak"
+    | "activity_7d"
+    | "activity_today"
+    | "leetcode_streak"
+    | "total_solved"
+    | "contest_rating";
 }
 
 export default function LeaderboardRow({
@@ -20,9 +27,11 @@ export default function LeaderboardRow({
   const isTop3 = entry.rank <= 3;
 
   // Streak Logic
-  const streak = entry.currentStreak || 0;
+  const steakValue = entry.currentStreak || entry.score || 0; // Use score if type implies it holds the value
   const isStreakBroken =
-    type === "streak" && streak === 0 && (entry.totalActiveDays || 0) > 0;
+    (type === "streak" || type === "leetcode_streak") &&
+    steakValue === 0 &&
+    (entry.totalActiveDays || 0) > 0;
 
   const getStreakIntensity = (s: number) => {
     if (s >= 30)
@@ -54,6 +63,8 @@ export default function LeaderboardRow({
     };
   };
 
+  const streak =
+    type === "leetcode_streak" ? entry.score || 0 : entry.currentStreak || 0;
   const streakStyles = getStreakIntensity(streak);
 
   const getRankStyles = (rank: number) => {
@@ -86,6 +97,86 @@ export default function LeaderboardRow({
           </span>
         );
     }
+  };
+
+  const renderValue = () => {
+    if (type === "streak" || type === "leetcode_streak") {
+      return (
+        <Tooltip
+          content={
+            <div className="text-center">
+              <p className="font-bold">{streak} day streak</p>
+              {isStreakBroken && (
+                <p className="text-red-300 text-[10px] mt-1">Streak lost!</p>
+              )}
+            </div>
+          }
+        >
+          <div className="flex flex-col items-end cursor-help">
+            <div
+              className={clsx(
+                "flex items-center gap-1.5 font-bold transition-colors",
+                streakStyles.color,
+              )}
+            >
+              <Flame
+                className={clsx(
+                  "w-4 h-4 transition-all",
+                  streakStyles.fill,
+                  streakStyles.flameAnim,
+                )}
+                style={{ animationDuration: streak >= 30 ? "1s" : "2s" }}
+              />
+              <span>{streak}</span>
+            </div>
+          </div>
+        </Tooltip>
+      );
+    }
+
+    if (type === "activity_7d" || type === "activity_today") {
+      return (
+        <div className="flex items-center gap-1.5 text-blue-600 font-bold">
+          <TrendingUp className="w-4 h-4" />
+          <span>{entry.score}</span>
+        </div>
+      );
+    }
+
+    if (type === "total_solved") {
+      return (
+        <div className="flex items-center gap-1.5 text-green-600 font-bold">
+          <span>{entry.score}</span>
+          <span className="text-xs font-medium text-gray-400 uppercase">
+            Solved
+          </span>
+        </div>
+      );
+    }
+
+    if (type === "contest_rating") {
+      return (
+        <div className="flex items-center gap-1.5 text-fuchsia-600 font-bold">
+          <span className="text-xs">Rating:</span>
+          <span>{entry.score}</span>
+        </div>
+      );
+    }
+
+    // Default Score
+    return (
+      <div className="flex flex-col items-end">
+        <div className="flex items-center gap-1.5 text-indigo-600 font-bold">
+          <TrendingUp className="w-4 h-4" />
+          <span>{(entry.score || 0).toFixed(2)}</span>
+        </div>
+        {entry.rank === 1 && (
+          <span className="text-[10px] font-semibold text-amber-500 uppercase tracking-tight">
+            Current Leader
+          </span>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -159,58 +250,8 @@ export default function LeaderboardRow({
         </Link>
       </div>
 
-      {/* Score / Streak */}
-      <div className="flex-shrink-0 text-right">
-        {type === "streak" ? (
-          <Tooltip
-            content={
-              <div className="text-center">
-                <p className="font-bold">{streak} day streak</p>
-                <p className="text-gray-300 text-[10px]">
-                  {entry.totalActiveDays} total active days
-                </p>
-                {isStreakBroken && (
-                  <p className="text-red-300 text-[10px] mt-1">Streak lost!</p>
-                )}
-              </div>
-            }
-          >
-            <div className="flex flex-col items-end cursor-help">
-              <div
-                className={clsx(
-                  "flex items-center gap-1.5 font-bold transition-colors",
-                  streakStyles.color,
-                )}
-              >
-                <Flame
-                  className={clsx(
-                    "w-4 h-4 transition-all",
-                    streakStyles.fill,
-                    streakStyles.flameAnim,
-                  )}
-                  style={{ animationDuration: streak >= 30 ? "1s" : "2s" }}
-                />
-                <span>{streak}</span>
-              </div>
-              <span className="text-xs text-gray-400 font-medium">
-                {entry.totalActiveDays || 0} Days
-              </span>
-            </div>
-          </Tooltip>
-        ) : (
-          <div className="flex flex-col items-end">
-            <div className="flex items-center gap-1.5 text-indigo-600 font-bold">
-              <TrendingUp className="w-4 h-4" />
-              <span>{(entry.score || 0).toFixed(2)}</span>
-            </div>
-            {entry.rank === 1 && (
-              <span className="text-[10px] font-semibold text-amber-500 uppercase tracking-tight">
-                Current Leader
-              </span>
-            )}
-          </div>
-        )}
-      </div>
+      {/* Score / Streak / Value */}
+      <div className="flex-shrink-0 text-right">{renderValue()}</div>
     </motion.div>
   );
 }

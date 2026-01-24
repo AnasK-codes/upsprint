@@ -45,6 +45,18 @@ export interface Group {
   createdAt: string;
 }
 
+export interface GroupMember {
+  id: number;
+  role: "ADMIN" | "MEMBER";
+  joinedAt: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    avatarUrl: string | null;
+  };
+}
+
 export interface Activity {
   id: string;
   type: "solve" | "connection" | "badge_unlock" | "rank_up";
@@ -187,12 +199,33 @@ export const api = {
 
   getUserGroups: () => request<Group[]>("/groups/me"),
 
+  createGroup: (name: string, description?: string) =>
+    request<Group>("/groups", {
+      method: "POST",
+      body: JSON.stringify({ name, description }),
+    }),
+
+  joinGroup: (code: string) =>
+    request<Group>("/groups/join", {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    }),
+
+  leaveGroup: (groupId: number) =>
+    request<{ message: string }>(`/groups/${groupId}/leave`, {
+      method: "POST",
+    }),
+
+  getGroupMembers: (groupId: number) =>
+    request<GroupMember[]>(`/groups/${groupId}/members`),
+
   getGroupLeaderboard: (
     groupId: number,
     page = 1,
-    limit = 50
+    limit = 50,
+    metric: "score" | "activity_7d" | "activity_today" | "leetcode_streak" | "total_solved" | "contest_rating" = "score"
   ) =>
     request<{ data: LeaderboardEntry[]; page: number; limit: number }>(
-      `/groups/${groupId}/leaderboard?page=${page}&limit=${limit}`
+      `/groups/${groupId}/leaderboard?page=${page}&limit=${limit}&metric=${metric}`
     ),
 };
