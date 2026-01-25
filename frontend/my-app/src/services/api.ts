@@ -1,4 +1,4 @@
-import { getAuthToken } from "@/utils/auth";
+
 const API_BASE = "http://localhost:4000";
 
 export interface LeaderboardEntry {

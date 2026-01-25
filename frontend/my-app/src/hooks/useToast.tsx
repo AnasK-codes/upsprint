@@ -7,7 +7,7 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
-import { ToastContainer, ToastData, ToastType } from "../components/Toast";
+import { ToastContainer, ToastData, ToastType } from "@/components/Toast";
 import { v4 as uuidv4 } from "uuid";
 
 interface ToastContextType {

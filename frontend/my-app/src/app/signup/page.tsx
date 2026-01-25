@@ -5,8 +5,9 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AnimatedButton from "@/components/AnimatedButton";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/useToast";
 import { api } from "@/services/api";
-import { useToast } from "@/context/ToastContext";
 import {
   Mail,
   Lock,

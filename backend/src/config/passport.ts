@@ -27,7 +27,6 @@ passport.use(
             avatarUrl: profile.photos?.[0]?.value || null,
             googleId: profile.id || null,
           };
-          console.log("Creating user with data:", userData);
           user = await prisma.user.create({
             data: userData,
           });

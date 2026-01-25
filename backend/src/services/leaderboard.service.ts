@@ -51,8 +51,16 @@ export async function fetchLatestSnapshotsWithAccountUser(): Promise<
 }
 
 /**
- * Normalize rating (0..1) and compute a scaled score (0..1000*weight).
- * Keep this simple and deterministic.
+ * Normalizes a platform-specific rating to a 0-1 scale.
+ * 
+ * Logic:
+ * - Codeforces: Max ~4000 (Grandmaster+)
+ * - CodeChef: Max ~3500
+ * - LeetCode: Max ~3000
+ * 
+ * We clamp the result to 1.0 to prevent outlier outliers from skewing the scale excessively.
+ * @param platform - The platform name (case-insensitive)
+ * @param ratingValue - The raw rating from the platform
  */
 export function normalizeRating(platform: string, ratingValue: number): number {
   let max = 3000;

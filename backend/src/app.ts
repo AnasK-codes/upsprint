@@ -15,10 +15,11 @@ import { apiLimiter } from "./middleware/rateLimit.middleware.js";
 import adminRoutes from "./routes/admin.routes.js";
 import { getMetricsText } from "./utils/metrics.js";
 import passport from "passport";
+import prisma from "./config/db.js";
 import oauthRoutes from "./routes/oauth.routes.js";
 
 const app = express();
-console.log("Database URL:", process.env.DATABASE_URL);
+
 
 // Middleware
 app.use(cors({
@@ -28,6 +29,7 @@ app.use(cors({
 app.use(cookieParser());
 app.use(express.json());
 app.use(passport.initialize());
+app.use(apiLimiter);
 
 app.use("/auth", oauthRoutes);
 app.use("/auth", authRoutes);

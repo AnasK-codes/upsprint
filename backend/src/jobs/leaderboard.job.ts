@@ -16,11 +16,20 @@ const PLATFORM_WEIGHTS: Record<string, number> = {
 };
 
 /**
- * Rebuild leaderboard:
- *  - fetch latest snapshots in one query
- *  - aggregate scores per user in memory
- *  - upsert leaderboard entries in batches
- *  - update simple metrics and logs
+ * Rebuilds the Global Leaderboard.
+ * 
+ * Strategy:
+ * 1. Fetch latest snapshots for all users across all platforms (optimized single query).
+ * 2. Aggregate scores in-memory:
+ *    - Score = (NormalizedRating * PlatformWeight * 1000)
+ *    - Users can have multiple platforms; scores are summed (or averaged, based on specific logic).
+ * 3. Sort users by total score descending.
+ * 4. Atomic Replace:
+ *    - We first DELETE all entries to remove stale users (e.g. those who disconnected accounts).
+ *    - Then we BULK INSERT the represented rankings.
+ * 
+ * This ensures the leaderboard is always consistent with the latest snapshot data.
+ * @returns Stats about the rebuild (users ranked, duration).
  */
 export async function rebuildLeaderboard() {
   const start = Date.now();
@@ -47,24 +56,22 @@ export async function rebuildLeaderboard() {
     }));
     rows.sort((a, b) => b.score - a.score);
 
-    // Upsert in batches
-    const BATCH = 200;
-    let ops: any[] = [];
-    for (let i = 0; i < rows.length; i++) {
-      ops.push(
-        prisma.leaderboard.upsert({
-          where: { userId: rows[i].userId },
-          create: { userId: rows[i].userId, score: rows[i].score, rank: i + 1 },
-          update: { score: rows[i].score, rank: i + 1 },
-        })
-      );
+    // Clear existing leaderboard to remove stale users
+    await prisma.leaderboard.deleteMany({});
 
-      if (ops.length >= BATCH) {
-        await prisma.$transaction(ops);
-        ops = [];
-      }
+    // Bulk insert new rankings
+    const BATCH = 200;
+    for (let i = 0; i < rows.length; i += BATCH) {
+      const batch = rows.slice(i, i + BATCH).map((row, idx) => ({
+        userId: row.userId,
+        score: row.score,
+        rank: i + idx + 1,
+      }));
+
+      await prisma.leaderboard.createMany({
+        data: batch,
+      });
     }
-    if (ops.length) await prisma.$transaction(ops);
 
     // clear cache so API returns fresh data
     clearCachePrefix("leaderboard:");

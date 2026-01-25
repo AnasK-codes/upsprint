@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { UserProfile, api } from "@/services/api";
-import { useToast } from "./ToastContext";
+import { useToast } from "./useToast";
 
 interface AuthContextType {
   user: UserProfile | null;

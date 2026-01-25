@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { motion, Variants } from "framer-motion";
 import { ArrowRight, Trophy, Zap, Globe, Code } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Home() {
   const { isAuthenticated, loading } = useAuth();

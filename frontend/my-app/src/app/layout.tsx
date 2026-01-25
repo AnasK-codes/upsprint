@@ -1,7 +1,7 @@
-import "./globals.css";
+import "../styles/globals.css";
 import Navbar from "../components/Navbar";
-import { ToastProvider } from "../context/ToastContext";
-import { AuthProvider } from "../context/AuthContext";
+import { ToastProvider } from "../hooks/useToast";
+import { AuthProvider } from "../hooks/useAuth";
 
 export const metadata = {
   title: "UpSprint",

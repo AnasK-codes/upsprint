@@ -107,62 +107,19 @@ export const connectAccount = async (req: AuthRequest, res: Response) => {
 
 
     // Immediate snapshot fetch
+    // Immediate snapshot fetch and processing (includes Daily Activity for LeetCode)
     try {
-      if (platform.toLowerCase() === "codeforces") {
-        const { fetchCodeforcesUser } = await import("../services/codeforces.service.js");
-        const data = await fetchCodeforcesUser(username);
-        await prisma.platformSnapshot.create({
-          data: {
-            linkedAccountId: newAccount.id,
-            rating: data.rating ?? null,
-            rankTitle: data.rank ?? null,
-            problemsSolved: data.maxRating ?? null,
-            rawData: data,
-          },
-        });
-      } else if (platform.toLowerCase() === "leetcode") {
-        const { fetchLeetCodeProfile } = await import("../services/leetcode.service.js");
-        const data = await fetchLeetCodeProfile(username);
-        await prisma.platformSnapshot.create({
-          data: {
-            linkedAccountId: newAccount.id,
-            rating: data.rating,
-            rankTitle: null,
-            problemsSolved: data.totalSolved,
-            rawData: data.raw,
-          },
-        });
-      } else if (platform.toLowerCase() === "codechef") {
-        const { fetchCodeChefProfile } = await import("../services/codechef.service.js");
-        const data = await fetchCodeChefProfile(username);
-        await prisma.platformSnapshot.create({
-          data: {
-            linkedAccountId: newAccount.id,
-            rating: data.rating,
-            rankTitle: data.stars || null,
-            problemsSolved: null,
-            rawData: data.raw,
-          },
-        });
-      }
+      const { processAccountSnapshot } = await import("../jobs/snapshot.job.js");
+      await processAccountSnapshot(newAccount);
 
       // --- INSTANT LEADERBOARD UPDATE START ---
-      // We explicitly import helpers to compute the new score for this user immediately
-      const { fetchLatestSnapshotsWithAccountUser, computeScore } = await import("../services/leaderboard.service.js");
-
-      // Calculate scores for THIS user only
-      // We can reuse the service logic but filter in memory or just fetch all for simplicity (but costly)
-      // Better: Re-run global rebuild? Data volume is low enough for now.
-      // Or even better: just fetch snapshots for this user.
-      // For now, let's trigger a full rebuild as data volume is low and it guarantees consistency.
-      // Optimize later if needed.
       const { rebuildLeaderboard } = await import("../jobs/leaderboard.job.js");
       await rebuildLeaderboard();
       // --- INSTANT LEADERBOARD UPDATE END ---
 
     } catch (fetchErr: any) {
       console.error(`Immediate fetch/update failed for ${platform}:${username}`, fetchErr.message);
-      // Optional: Undo account creation if valid username check is desired
+      // Undo account creation
       await prisma.linkedAccount.delete({ where: { id: newAccount.id } });
       return res.status(400).json({ message: "Invalid username or API error" });
     }
@@ -191,9 +148,32 @@ export const disconnectAccount = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
+    // Delete related data first to avoid Foreign Key constraint errors
+    await prisma.platformSnapshot.deleteMany({
+      where: { linkedAccountId: Number(id) },
+    });
+    await prisma.dailyActivity.deleteMany({
+      where: { linkedAccountId: Number(id) },
+    });
+
     await prisma.linkedAccount.delete({
       where: { id: Number(id) },
     });
+
+    // Check if user has any remaining accounts
+    const remainingAccountsCount = await prisma.linkedAccount.count({
+      where: { userId: req.userId },
+    });
+
+    if (remainingAccountsCount === 0) {
+      await prisma.leaderboard.delete({
+        where: { userId: req.userId },
+      }).catch(() => { }); // Ignore if not found
+    }
+
+    // Always rebuild to ensure correct ranking/scores for everyone
+    const { rebuildLeaderboard } = await import("../jobs/leaderboard.job.js");
+    await rebuildLeaderboard();
 
     res.json({ message: "Account disconnected successfully" });
   } catch (error) {

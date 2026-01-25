@@ -4,6 +4,17 @@ import { fetchLeetCodeProfile } from "../services/leetcode.service.js";
 import { fetchCodeChefProfile } from "../services/codechef.service.js";
 import logger from "../utils/logger.js";
 
+/**
+ * Ingests a snapshot for a single linked account.
+ * 
+ * This function:
+ * 1. Fetches the latest public profile data from the platform's API.
+ * 2. Stores a `PlatformSnapshot` record (archival).
+ * 3. For LeetCode: Parses the `submissionCalendar` to update the `DailyActivity` table.
+ * 4. Calculates and updates the `currentStreak` based on the calendar heatmap.
+ * 
+ * @param acc - The LinkedAccount database object
+ */
 export async function processAccountSnapshot(acc: any) {
   try {
     if (acc.platform === "codeforces") {

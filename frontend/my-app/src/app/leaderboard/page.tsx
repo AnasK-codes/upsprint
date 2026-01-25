@@ -7,6 +7,13 @@ export const metadata: Metadata = {
     "Global rankings of competitive programmers across all platforms.",
 };
 
+import { Suspense } from "react";
+import Loading from "@/components/Loading";
+
 export default function LeaderboardPage() {
-  return <LeaderboardClient />;
+  return (
+    <Suspense fallback={<Loading />}>
+      <LeaderboardClient />
+    </Suspense>
+  );
 }

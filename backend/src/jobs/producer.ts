@@ -1,11 +1,8 @@
 import prisma from "../config/db.js";
 import { snapshotQueue } from "../config/queue.js";
 import { fetchCodeforcesUser } from "../services/codeforces.service.js";
-
-/**
- * Register snapshot processor (called once at startup)
- */
 import { fetchLeetCodeProfile } from "../services/leetcode.service.js";
+import logger from "../utils/logger.js";
 
 /**
  * Register snapshot processor (called once at startup)
@@ -22,7 +19,7 @@ snapshotQueue.registerProcessor(async ({ accountId, username, platform }) => {
         rawData: data,
       },
     });
-    console.log(`[QUEUE] Codeforces snapshot saved for ${username}`);
+    logger.info(`[QUEUE] Codeforces snapshot saved for ${username}`);
   } else if (platform === "leetcode") {
     const data = await fetchLeetCodeProfile(username);
     await prisma.platformSnapshot.create({
@@ -34,7 +31,7 @@ snapshotQueue.registerProcessor(async ({ accountId, username, platform }) => {
         rawData: data.raw,
       },
     });
-    console.log(`[QUEUE] LeetCode snapshot saved for ${username}`);
+    logger.info(`[QUEUE] LeetCode snapshot saved for ${username}`);
   }
 });
 
