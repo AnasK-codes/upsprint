@@ -251,7 +251,11 @@ router.get("/user/:userId", async (req, res) => {
     const userId = Number(req.params.userId);
     const row = await prisma.leaderboard.findUnique({
       where: { userId },
-      include: { user: true },
+      include: {
+        user: {
+          include: { accounts: true },
+        },
+      },
     });
 
     const accountWithMaxStreak = await prisma.linkedAccount.findFirst({

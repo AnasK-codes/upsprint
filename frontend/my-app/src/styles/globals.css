@@ -5,9 +5,10 @@
   --background: #f8fafc; /* Slate-50 */
   --foreground: #0f172a; /* Slate-900 */
 
-  /* Brand Colors */
-  --primary: #4f46e5; /* Indigo-600 */
-  --primary-hover: #4338ca; /* Indigo-700 */
+  /* Brand Colors - Indigo & Cyan */
+  --primary: #3b82f6; /* Indigo-500/Blue-500 as brighter primary */
+  --primary-dark: #1e3a8a; /* Indigo-900/Blue-900 as deep primary */
+  --primary-hover: #2563eb; /* Blue-600 */
   --secondary: #06b6d4; /* Cyan-500 */
 
   /* Surface Colors */

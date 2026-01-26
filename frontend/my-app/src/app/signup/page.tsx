@@ -89,14 +89,14 @@ export default function SignupPage() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 200, damping: 15 }}
-              className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30"
+              className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/30"
             >
               <User className="h-8 w-8" />
             </motion.div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
               Create Account
             </h1>
-            <p className="mt-2 text-sm text-gray-500 font-medium">
+            <p className="mt-2 text-sm text-slate-500 font-medium">
               Join the community and start your journey
             </p>
           </div>
@@ -182,7 +182,7 @@ export default function SignupPage() {
               <AnimatedButton
                 type="submit"
                 isLoading={loading}
-                className="w-full h-12 text-base shadow-purple-500/25 bg-gray-900 hover:bg-gray-800"
+                className="w-full h-12 text-base"
               >
                 Create Account <ChevronRight className="h-4 w-4 ml-1" />
               </AnimatedButton>
@@ -193,7 +193,7 @@ export default function SignupPage() {
             Already have an account?{" "}
             <Link
               href="/login"
-              className="font-semibold text-purple-600 hover:text-purple-500 hover:underline transition-all"
+              className="font-semibold text-indigo-600 hover:text-indigo-500 hover:underline transition-all"
             >
               Log in
             </Link>

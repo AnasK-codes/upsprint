@@ -48,7 +48,7 @@ export default function ProfileCard({
       className="relative overflow-hidden rounded-3xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-xl"
     >
       {/* Background Decor */}
-      <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-90" />
+      <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-indigo-500 via-cyan-500 to-blue-500 opacity-90" />
 
       <div className="relative px-8 pt-20 pb-8">
         <div className="flex flex-col md:flex-row items-end md:items-start gap-6">
@@ -72,7 +72,7 @@ export default function ProfileCard({
               />
             </div>
             {!isEditing && (
-              <div className="absolute -bottom-3 -right-3 bg-white p-2 rounded-xl shadow-lg border border-gray-100">
+              <div className="absolute -bottom-3 -right-3 bg-white p-2 rounded-xl shadow-lg border border-slate-100">
                 <span className="text-xl">🎓</span>
               </div>
             )}
@@ -83,65 +83,65 @@ export default function ProfileCard({
             <div className="flex justify-between items-start">
               <div className="w-full">
                 {isEditing ? (
-                  <div className="space-y-4 max-w-md">
+                  <div className="range-group space-y-4 max-w-md">
                     <div>
-                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                         Name
                       </label>
                       <input
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
-                        className="w-full mt-1 p-2 bg-white/50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                        className="w-full mt-1 p-2 bg-white/50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                           Batch
                         </label>
                         <input
                           name="batch"
                           value={formData.batch}
                           onChange={handleChange}
-                          className="w-full mt-1 p-2 bg-white/50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                          className="w-full mt-1 p-2 bg-white/50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                           Branch
                         </label>
                         <input
                           name="branch"
                           value={formData.branch}
                           onChange={handleChange}
-                          className="w-full mt-1 p-2 bg-white/50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                          className="w-full mt-1 p-2 bg-white/50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                         Avatar URL
                       </label>
                       <input
                         name="avatarUrl"
                         value={formData.avatarUrl}
                         onChange={handleChange}
-                        className="w-full mt-1 p-2 bg-white/50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-sm font-mono"
+                        className="w-full mt-1 p-2 bg-white/50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-mono"
                       />
                     </div>
                   </div>
                 ) : (
                   <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">
                       {user.name || "Anonymous User"}
                     </h1>
-                    <div className="flex items-center gap-2 text-gray-500 font-medium mt-1">
+                    <div className="flex items-center gap-2 text-slate-500 font-medium mt-1">
                       <span>{user.batch || "Batch N/A"}</span>
                       <span>•</span>
                       <span>{user.branch || "Branch N/A"}</span>
                     </div>
-                    <div className="mt-1 text-sm text-gray-400 font-mono">
+                    <div className="mt-1 text-sm text-slate-400 font-mono">
                       {user.email}
                     </div>
                   </div>
@@ -154,8 +154,8 @@ export default function ProfileCard({
                 className={clsx(
                   "p-2 rounded-xl transition-all shadow-sm",
                   isEditing
-                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:shadow-green-200"
-                    : "bg-white text-gray-600 hover:text-purple-600 hover:bg-purple-50 border border-gray-100",
+                    ? "bg-[#1E3A8A] text-white hover:bg-[#3B82F6] shadow-md hover:shadow-indigo-500/20"
+                    : "bg-white text-[#1E3A8A] border border-cyan-500 hover:bg-cyan-50 shadow-sm hover:shadow-cyan-500/10",
                 )}
               >
                 {saving ? (
@@ -172,37 +172,37 @@ export default function ProfileCard({
 
         {/* Highlight Stats */}
         {!isEditing && (
-          <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-gray-100">
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-4 rounded-2xl border border-amber-100">
+          <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-slate-100">
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
               <div className="flex items-center gap-2 mb-1">
-                <Trophy className="w-4 h-4 text-amber-500" />
-                <span className="text-xs font-bold text-amber-600 uppercase">
+                <Trophy className="w-4 h-4 text-slate-500" />
+                <span className="text-xs font-bold text-slate-600 uppercase">
                   Rank
                 </span>
               </div>
-              <div className="text-2xl font-black text-gray-900">
+              <div className="text-2xl font-black text-[#0F172A]">
                 {stats?.rank ? `#${stats.rank}` : "--"}
               </div>
             </div>
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-2xl border border-blue-100">
+            <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
               <div className="flex items-center gap-2 mb-1">
-                <Target className="w-4 h-4 text-blue-500" />
-                <span className="text-xs font-bold text-blue-600 uppercase">
+                <Target className="w-4 h-4 text-[#1E3A8A]" />
+                <span className="text-xs font-bold text-[#1E3A8A] uppercase">
                   Score
                 </span>
               </div>
-              <div className="text-2xl font-black text-gray-900">
+              <div className="text-2xl font-black text-[#0F172A]">
                 {stats?.score ?? "--"}
               </div>
             </div>
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-2xl border border-purple-100">
+            <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
               <div className="flex items-center gap-2 mb-1">
-                <Zap className="w-4 h-4 text-purple-500" />
-                <span className="text-xs font-bold text-purple-600 uppercase">
+                <Zap className="w-4 h-4 text-emerald-600" />
+                <span className="text-xs font-bold text-emerald-700 uppercase">
                   Streak
                 </span>
               </div>
-              <div className="text-2xl font-black text-gray-900">
+              <div className="text-2xl font-black text-[#0F172A]">
                 {stats?.streak ? `${stats.streak} Days` : "--"}
               </div>
             </div>

@@ -53,7 +53,7 @@ export default function GroupDetails({
       <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 overflow-hidden shadow-2xl text-white">
         {/* Background Decorative Elements */}
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-64 h-64 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
 
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-2">
@@ -138,7 +138,7 @@ export default function GroupDetails({
                 key={member.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-indigo-100 hover:shadow-md hover:shadow-indigo-50/50 transition-all bg-white group"
+                className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-indigo-100 hover:shadow-md hover:shadow-indigo-50/50 transition-all bg-white group"
               >
                 <div className="relative">
                   {member.user.avatarUrl ? (
@@ -148,7 +148,7 @@ export default function GroupDetails({
                       className="w-12 h-12 rounded-full bg-gray-100 object-cover ring-2 ring-white shadow-sm"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 flex items-center justify-center font-bold text-lg ring-2 ring-white shadow-sm">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-100 to-cyan-100 text-indigo-600 flex items-center justify-center font-bold text-lg ring-2 ring-white shadow-sm">
                       {member.user.name[0]?.toUpperCase()}
                     </div>
                   )}
@@ -163,10 +163,10 @@ export default function GroupDetails({
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
+                  <p className="text-sm font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
                     {member.user.name}
                   </p>
-                  <p className="text-xs text-gray-500 truncate mt-0.5">
+                  <p className="text-xs text-slate-500 truncate mt-0.5">
                     Joined{" "}
                     {new Date(member.joinedAt).toLocaleDateString(undefined, {
                       month: "short",

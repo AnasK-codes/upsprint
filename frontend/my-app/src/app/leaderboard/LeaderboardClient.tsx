@@ -175,7 +175,7 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/50 pt-24 sm:pt-32 pb-12 px-6">
+    <div className="relative min-h-screen bg-gradient-to-br from-indigo-50/50 via-white to-cyan-50/50 pt-24 sm:pt-32 pb-12 px-6">
       <AnimatePresence>
         {showWelcome && (
           <WelcomeAnimation onComplete={() => setShowWelcome(false)} />
@@ -188,7 +188,7 @@ export default function LeaderboardPage() {
           <motion.h1
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center gap-3"
+            className="text-4xl md:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-cyan-600 flex items-center gap-3"
           >
             <span>🔥</span> Leaderboard
           </motion.h1>
@@ -197,7 +197,7 @@ export default function LeaderboardPage() {
             key={activeTab}
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-gray-500 max-w-lg text-lg"
+            className="text-slate-500 max-w-lg text-lg"
           >
             {activeTab === "leetcode"
               ? "Rankings based only on LeetCode performance."
@@ -209,21 +209,21 @@ export default function LeaderboardPage() {
           </motion.p>
 
           {/* Animated Tabs */}
-          <div className="flex p-1 bg-white/60 backdrop-blur-md border border-gray-200/50 rounded-full shadow-sm relative mt-6 overflow-x-auto max-w-full">
+          <div className="flex p-1 bg-slate-50/50 backdrop-blur-md border border-slate-200 rounded-full shadow-sm relative mt-6 overflow-x-auto max-w-full">
             {(["global", "leetcode", "daily", "groups"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => handleTabChange(tab)}
                 className={`relative px-6 py-2.5 text-sm font-medium rounded-full transition-colors z-10 ${
                   activeTab === tab
-                    ? "text-gray-900"
-                    : "text-gray-500 hover:text-gray-700"
+                    ? "text-[#1E3A8A]"
+                    : "text-[#475569] hover:text-[#1E3A8A]"
                 }`}
               >
                 {activeTab === tab && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute inset-0 bg-white rounded-full shadow-sm border border-gray-100/50"
+                    className="absolute inset-0 bg-white rounded-full shadow-sm border border-cyan-500/30"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                     style={{ zIndex: -1 }}
                   />
@@ -314,7 +314,7 @@ export default function LeaderboardPage() {
 
               <button
                 onClick={() => setShowGroupModal(true)}
-                className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
+                className="flex items-center gap-2 px-6 py-2.5 bg-[#1E3A8A] text-white rounded-full font-medium hover:bg-[#3B82F6] transition-colors shadow-lg hover:shadow-indigo-500/20 transform hover:-translate-y-0.5 active:translate-y-0"
               >
                 <Plus className="w-4 h-4" />
                 {groups.length > 0
@@ -497,8 +497,8 @@ function FilterDropdown({
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
           value !== "All"
-            ? "bg-indigo-100 text-indigo-700 border border-indigo-200"
-            : "bg-white text-gray-600 border border-gray-200 hover:border-gray-300"
+            ? "bg-indigo-50 text-[#1E3A8A] border border-indigo-200"
+            : "bg-white text-slate-600 border border-slate-200 hover:border-slate-300"
         }`}
       >
         <span>

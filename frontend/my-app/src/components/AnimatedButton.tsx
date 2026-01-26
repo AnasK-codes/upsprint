@@ -26,10 +26,10 @@ export default function AnimatedButton({
 }: AnimatedButtonProps) {
   const variants = {
     primary:
-      "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md hover:shadow-indigo-500/30",
+      "bg-[#1E3A8A] text-white hover:bg-[#3B82F6] shadow-lg hover:shadow-indigo-500/20",
     secondary:
-      "bg-white text-gray-800 border border-gray-200 hover:bg-gray-50 shadow-sm",
-    ghost: "bg-transparent text-gray-600 hover:bg-gray-100",
+      "bg-white text-[#1E3A8A] border border-cyan-500 hover:bg-cyan-50 shadow-sm hover:shadow-cyan-500/10",
+    ghost: "bg-transparent text-[#475569] hover:bg-slate-100",
     danger: "bg-red-50 text-red-600 hover:bg-red-100",
   };
 

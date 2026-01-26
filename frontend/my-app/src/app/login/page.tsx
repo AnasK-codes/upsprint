@@ -66,14 +66,14 @@ export default function LoginPage() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 200, damping: 15 }}
-              className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/30"
+              className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/30"
             >
               <LogIn className="h-8 w-8" />
             </motion.div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
               Welcome Back
             </h1>
-            <p className="mt-2 text-sm text-gray-500 font-medium">
+            <p className="mt-2 text-sm text-slate-500 font-medium">
               Enter your credentials to access your workspace
             </p>
           </div>
@@ -115,7 +115,7 @@ export default function LoginPage() {
               <AnimatedButton
                 type="submit"
                 isLoading={loading}
-                className="w-full h-12 text-base shadow-indigo-500/25"
+                className="w-full h-12 text-base"
               >
                 Log In <ChevronRight className="h-4 w-4 ml-1" />
               </AnimatedButton>
@@ -124,10 +124,10 @@ export default function LoginPage() {
 
           <div className="my-8 relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-200" />
+              <span className="w-full border-t border-slate-200" />
             </div>
             <div className="relative flex justify-center text-xs uppercase tracking-widest">
-              <span className="bg-transparent px-2 text-gray-400 font-bold backdrop-blur-xl">
+              <span className="bg-transparent px-2 text-slate-400 font-bold backdrop-blur-xl">
                 Or continue with
               </span>
             </div>
@@ -140,7 +140,7 @@ export default function LoginPage() {
             onClick={() => {
               window.location.href = "http://localhost:4000/auth/google";
             }}
-            className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white py-3 font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md"
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-cyan-500 bg-white py-3 font-semibold text-[#1E3A8A] shadow-sm transition-all hover:bg-cyan-50 hover:shadow-cyan-500/10"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
               <path
@@ -163,7 +163,7 @@ export default function LoginPage() {
             Continue with Google
           </motion.button>
 
-          <p className="mt-8 text-center text-sm text-gray-500">
+          <p className="mt-8 text-center text-sm text-slate-500">
             Don't have an account?{" "}
             <Link
               href="/signup"

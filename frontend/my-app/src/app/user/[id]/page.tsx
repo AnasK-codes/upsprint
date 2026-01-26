@@ -34,45 +34,80 @@ export default function UserRankPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto">
-      <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl overflow-hidden border border-white/50">
-        <div className="bg-gradient-to-r from-indigo-500 to-cyan-400 p-6 text-white text-center">
-          <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full mx-auto flex items-center justify-center text-3xl font-bold mb-3 shadow-inner">
-            {data.user.name.charAt(0).toUpperCase()}
+    <div className="min-h-screen pt-32 pb-20 px-4">
+      <div className="max-w-lg mx-auto bg-white/60 backdrop-blur-2xl shadow-2xl rounded-[32px] overflow-hidden border border-white/40 ring-1 ring-white/50">
+        <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-8 text-white text-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
+          <div className="relative z-10">
+            <div className="w-24 h-24 bg-white/10 backdrop-blur-md rounded-full mx-auto flex items-center justify-center text-4xl font-bold mb-4 shadow-inner ring-1 ring-white/20">
+              {data.user.name.charAt(0).toUpperCase()}
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              {data.user.name}
+            </h1>
+            <p className="text-indigo-200 text-xs font-medium uppercase tracking-widest mt-1">
+              Competitive Programmer
+            </p>
           </div>
-          <h1 className="text-2xl font-bold">{data.user.name}</h1>
-          <p className="text-indigo-100 text-sm">Competitive Programmer</p>
         </div>
 
-        <div className="p-8 space-y-6">
+        <div className="p-8 space-y-8">
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gray-50 p-4 rounded-2xl text-center border border-gray-100">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                Rank
+            <div className="bg-white/50 p-6 rounded-2xl text-center border border-white/60 shadow-sm">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">
+                Global Rank
               </span>
-              <p className="text-3xl font-bold text-gray-900 mt-1">
-                #{data.rank}
-              </p>
+              <p className="text-4xl font-black text-slate-900">#{data.rank}</p>
             </div>
-            <div className="bg-gray-50 p-4 rounded-2xl text-center border border-gray-100">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                Score
+            <div className="bg-white/50 p-6 rounded-2xl text-center border border-white/60 shadow-sm">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">
+                Total Score
               </span>
-              <p className="text-3xl font-bold text-indigo-600 mt-1">
+              <p className="text-4xl font-black text-indigo-900">
                 {data.score.toFixed(0)}
               </p>
             </div>
           </div>
 
-          <div className="text-center pt-2">
-            <a
-              href={`https://codeforces.com/profile/${data.user.name}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
-            >
-              View External Profile &rarr;
-            </a>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            {data.user.accounts?.map((acc: any) => {
+              let url = "#";
+              let label = acc.platform;
+              let bgClass = "bg-slate-900 hover:bg-slate-800";
+
+              if (acc.platform === "leetcode") {
+                url = `https://leetcode.com/u/${acc.username}/`;
+                label = "LeetCode";
+                bgClass = "bg-[#FFA116] hover:bg-orange-500";
+              } else if (acc.platform === "codeforces") {
+                url = `https://codeforces.com/profile/${acc.username}`;
+                label = "Codeforces";
+                bgClass = "bg-[#1F8ACB] hover:bg-blue-600";
+              } else if (acc.platform === "codechef") {
+                url = `https://www.codechef.com/users/${acc.username}`;
+                label = "CodeChef";
+                bgClass = "bg-[#5D4037] hover:bg-brown-600";
+              }
+
+              return (
+                <a
+                  key={acc.id}
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`inline-flex items-center gap-2 px-6 py-3 text-white text-xs font-bold uppercase tracking-widest rounded-full transition-all hover:scale-105 shadow-lg ${bgClass}`}
+                >
+                  {label}
+                  <span aria-hidden="true">&rarr;</span>
+                </a>
+              );
+            })}
+
+            {(!data.user.accounts || data.user.accounts.length === 0) && (
+              <p className="text-sm text-gray-500 italic">
+                No connected accounts visible.
+              </p>
+            )}
           </div>
         </div>
       </div>

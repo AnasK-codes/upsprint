@@ -30,8 +30,9 @@ export default function BadgeCard({ badge }: BadgeCardProps) {
       spread: 70,
       startVelocity: 30,
       gravity: 0.8,
+
       ticks: 200,
-      colors: ["#6366f1", "#ec4899", "#f59e0b"],
+      colors: ["#06b6d4", "#f1f5f9", "#cbd5e1"], // Cyan, Slate-100, Slate-300
     });
   };
 
@@ -43,13 +44,13 @@ export default function BadgeCard({ badge }: BadgeCardProps) {
       className={clsx(
         "relative group p-4 rounded-2xl border transition-all cursor-default overflow-hidden flex flex-col items-center text-center h-full",
         badge.isUnlocked
-          ? "bg-white border-indigo-100 shadow-sm hover:shadow-indigo-100/50 hover:border-indigo-200 cursor-pointer"
-          : "bg-gray-50 border-dashed border-gray-200 opacity-70",
+          ? "bg-white border-slate-200 shadow-sm hover:shadow-cyan-100/50 hover:border-cyan-200 cursor-pointer"
+          : "bg-slate-50 border-dashed border-slate-200 opacity-70",
       )}
     >
       {/* Background Glow for Unlocked */}
       {badge.isUnlocked && (
-        <div className="absolute inset-0 bg-gradient-to-tr from-indigo-50/50 via-purple-50/50 to-pink-50/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-slate-50/50 via-cyan-50/30 to-slate-100/50 opacity-0 group-hover:opacity-100 transition-opacity" />
       )}
 
       {/* Icon */}
@@ -57,8 +58,8 @@ export default function BadgeCard({ badge }: BadgeCardProps) {
         className={clsx(
           "w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-3 shadow-sm relative z-10 transition-transform",
           badge.isUnlocked
-            ? "bg-white text-gray-900 group-hover:scale-110"
-            : "bg-gray-200 text-gray-400 grayscale",
+            ? "bg-white text-slate-900 group-hover:scale-110"
+            : "bg-slate-200 text-slate-400 grayscale",
         )}
       >
         {badge.isUnlocked ? (
@@ -73,12 +74,12 @@ export default function BadgeCard({ badge }: BadgeCardProps) {
         <h4
           className={clsx(
             "font-bold",
-            badge.isUnlocked ? "text-gray-900" : "text-gray-500",
+            badge.isUnlocked ? "text-slate-900" : "text-slate-500",
           )}
         >
           {badge.name}
         </h4>
-        <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+        <p className="text-xs text-slate-500 mt-1 line-clamp-2">
           {badge.description}
         </p>
       </div>
@@ -88,8 +89,8 @@ export default function BadgeCard({ badge }: BadgeCardProps) {
         className={clsx(
           "absolute top-2 right-2 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shadow-sm",
           badge.isUnlocked
-            ? "bg-white/80 text-gray-400"
-            : "bg-gray-200 text-gray-400",
+            ? "bg-white/80 text-slate-400"
+            : "bg-slate-200 text-slate-400",
         )}
       >
         {badge.category}

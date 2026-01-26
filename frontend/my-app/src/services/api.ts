@@ -11,6 +11,7 @@ export interface LeaderboardEntry {
   user: {
     id: number;
     name: string;
+    accounts?: LinkedAccount[];
   };
 }
 

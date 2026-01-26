@@ -10,7 +10,7 @@ export default function BrandedLoader() {
           animate={{ scale: 1, opacity: 1 }}
         />
         <motion.div
-          className="absolute inset-0 border-4 border-t-indigo-600 border-r-transparent border-b-purple-600 border-l-transparent rounded-full"
+          className="absolute inset-0 border-4 border-t-indigo-600 border-r-transparent border-b-cyan-500 border-l-transparent rounded-full"
           animate={{ rotate: 360 }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
         />
@@ -23,7 +23,7 @@ export default function BrandedLoader() {
         </motion.div>
       </div>
       <motion.p
-        className="text-sm font-medium text-gray-400 uppercase tracking-widest"
+        className="text-sm font-medium text-slate-400 uppercase tracking-widest"
         animate={{ opacity: [0.4, 1, 0.4] }}
         transition={{ duration: 1.5, repeat: Infinity }}
       >

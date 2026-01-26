@@ -142,14 +142,14 @@ export default function ProfilePage() {
   const platforms = ["codeforces", "leetcode", "codechef"];
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pt-24 sm:pt-32 pb-12 px-6">
+    <div className="min-h-screen bg-slate-50/50 pt-24 sm:pt-32 pb-12 px-6">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Profile Card */}
         <ProfileCard user={user} stats={stats} onUpdate={handleUpdateProfile} />
 
         {/* Platforms Grid */}
         <div>
-          <h2 className="text-xl font-bold text-gray-900 mb-4 px-2">
+          <h2 className="text-xl font-bold text-slate-900 mb-4 px-2">
             Connected Platforms
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -175,12 +175,14 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between px-2">
-              <h2 className="text-xl font-bold text-gray-900">Live Activity</h2>
+              <h2 className="text-xl font-bold text-slate-900">
+                Live Activity
+              </h2>
             </div>
             {activities.length > 0 ? (
               <ActivityTimeline activities={activities} />
             ) : (
-              <div className="p-8 text-center text-gray-500 bg-white/50 rounded-2xl border border-dashed border-gray-200">
+              <div className="p-8 text-center text-slate-500 bg-white/50 rounded-2xl border border-dashed border-slate-200">
                 No recent activity found. Solve some problems!
               </div>
             )}
@@ -188,7 +190,7 @@ export default function ProfilePage() {
 
           <div className="lg:col-span-1 space-y-4 text-center">
             {/* Coming Soon badges */}
-            <div className="p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100">
+            <div className="p-6 bg-gradient-to-br from-indigo-50 to-cyan-50 rounded-2xl border border-indigo-100">
               <h3 className="font-bold text-indigo-900 mb-2">Badges</h3>
               <p className="text-sm text-indigo-600 mb-4">
                 Complete challenges to earn badges. Coming soon!
@@ -220,7 +222,7 @@ export default function ProfilePage() {
                 className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden"
               >
                 <div className="p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4">
                     Connect {selectedPlatform}
                   </h3>
                   <form onSubmit={handleConnectSubmit}>
@@ -230,13 +232,13 @@ export default function ProfilePage() {
                       placeholder={`${selectedPlatform} username`}
                       value={connectUsername}
                       onChange={(e) => setConnectUsername(e.target.value)}
-                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none mb-4"
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none mb-4"
                     />
                     <div className="flex gap-3">
                       <button
                         type="button"
                         onClick={() => setShowConnectModal(false)}
-                        className="flex-1 py-2.5 font-medium text-gray-600 hover:bg-gray-100 rounded-xl transition"
+                        className="flex-1 py-2.5 font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition"
                       >
                         Cancel
                       </button>

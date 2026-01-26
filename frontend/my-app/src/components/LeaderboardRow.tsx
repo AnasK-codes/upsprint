@@ -36,9 +36,9 @@ export default function LeaderboardRow({
   const getStreakIntensity = (s: number) => {
     if (s >= 30)
       return {
-        color: "text-purple-600",
-        fill: "fill-purple-600",
-        shadow: "shadow-purple-200",
+        color: "text-cyan-600",
+        fill: "fill-cyan-600",
+        shadow: "shadow-cyan-200",
         flameAnim: "animate-bounce",
       };
     if (s >= 7)
@@ -70,7 +70,8 @@ export default function LeaderboardRow({
   const getRankStyles = (rank: number) => {
     switch (rank) {
       case 1:
-        return "bg-gradient-to-r from-yellow-50 to-amber-50 border-amber-200 shadow-amber-100/50";
+      case 1:
+        return "bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200 shadow-emerald-100/50";
       case 2:
         return "bg-gradient-to-r from-gray-50 to-slate-100 border-slate-200 shadow-slate-100/50";
       case 3:
@@ -84,7 +85,7 @@ export default function LeaderboardRow({
     switch (rank) {
       case 1:
         return (
-          <Crown className="w-5 h-5 text-amber-500 fill-amber-500 animate-pulse" />
+          <Crown className="w-5 h-5 text-emerald-500 fill-emerald-500 animate-pulse" />
         );
       case 2:
         return <Medal className="w-5 h-5 text-slate-400 fill-slate-400" />;
@@ -156,7 +157,7 @@ export default function LeaderboardRow({
 
     if (type === "contest_rating") {
       return (
-        <div className="flex items-center gap-1.5 text-fuchsia-600 font-bold">
+        <div className="flex items-center gap-1.5 text-indigo-600 font-bold">
           <span className="text-xs">Rating:</span>
           <span>{entry.score}</span>
         </div>
@@ -171,7 +172,7 @@ export default function LeaderboardRow({
           <span>{(entry.score || 0).toFixed(2)}</span>
         </div>
         {entry.rank === 1 && (
-          <span className="text-[10px] font-semibold text-amber-500 uppercase tracking-tight">
+          <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-tight">
             Current Leader
           </span>
         )}

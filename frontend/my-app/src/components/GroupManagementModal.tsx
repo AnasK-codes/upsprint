@@ -138,7 +138,7 @@ export default function GroupManagementModal({
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-indigo-600 text-white font-medium py-2.5 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-[#1E3A8A] text-white font-medium py-2.5 rounded-lg hover:bg-[#3B82F6] active:bg-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading
                 ? "Processing..."

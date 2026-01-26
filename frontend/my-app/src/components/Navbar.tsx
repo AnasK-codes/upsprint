@@ -12,9 +12,15 @@ export default function Navbar() {
   const pathname = usePathname();
   const { isAuthenticated, logout, loading } = useAuth();
   const [mounted, setMounted] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const navLinks = [
@@ -31,21 +37,26 @@ export default function Navbar() {
       <motion.nav
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 bg-white/90 backdrop-blur-xl border border-gray-200/50 shadow-lg rounded-full pointer-events-auto max-w-full sm:max-w-fit overflow-x-auto no-scrollbar"
+        className={clsx(
+          "flex items-center gap-1 sm:gap-2 border shadow-2xl shadow-black/10 rounded-full pointer-events-auto max-w-full sm:max-w-fit overflow-x-auto no-scrollbar transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+          isScrolled
+            ? "p-2 bg-white/60 backdrop-blur-[40px] border-white/40 ring-1 ring-white/50"
+            : "p-2.5 bg-white/40 backdrop-blur-[30px] border-white/30 ring-1 ring-white/40",
+        )}
       >
         {/* Logo Icon (Small) */}
         {/* Logo Text */}
         <Link
           href="/"
-          className="flex-shrink-0 flex items-center justify-center ml-2 no-underline"
+          className="flex-shrink-0 flex items-center justify-center ml-3 mr-1 no-underline group"
         >
-          <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent hover:opacity-80 transition-opacity">
+          <span className="text-lg font-bold uppercase tracking-widest text-indigo-900 group-hover:text-indigo-700 transition-colors">
             UpSprint
           </span>
         </Link>
 
         {/* Divider */}
-        <div className="w-px h-6 bg-gray-200 mx-1" />
+        <div className="w-px h-5 bg-indigo-900/10 mx-2" />
 
         {/* Links */}
         <div className="flex items-center gap-1">
@@ -56,17 +67,17 @@ export default function Navbar() {
                 key={link.name}
                 href={link.href}
                 className={clsx(
-                  "relative px-5 py-2 text-sm font-medium rounded-full transition-colors no-underline",
+                  "relative px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-full transition-all duration-300 ease-out no-underline",
                   isActive
-                    ? "text-gray-900"
-                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100/50",
+                    ? "text-slate-900"
+                    : "text-slate-500 hover:text-slate-900 hover:bg-white/40",
                 )}
               >
                 {isActive && (
                   <motion.div
                     layoutId="pill-nav"
-                    className="absolute inset-0 bg-white shadow-sm border border-gray-100 rounded-full -z-10"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    className="absolute inset-0 bg-white/50 backdrop-blur-xl border border-white/60 shadow-sm rounded-full -z-10"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
                 )}
                 {link.name}
@@ -76,7 +87,7 @@ export default function Navbar() {
         </div>
 
         {/* Divider */}
-        <div className="w-px h-6 bg-gray-200 mx-1" />
+        <div className="w-px h-5 bg-indigo-900/10 mx-2" />
 
         {/* Auth Section */}
         <div className="flex-shrink-0 pr-1">
@@ -86,7 +97,7 @@ export default function Navbar() {
                 <AnimatedButton
                   variant="ghost"
                   onClick={logout}
-                  className="px-3 py-1.5 text-xs h-auto min-h-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                  className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest h-auto min-h-0 text-red-500 hover:text-red-700 hover:bg-red-50/50 rounded-full"
                 >
                   Logout
                 </AnimatedButton>
@@ -94,7 +105,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/login"
-                className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-xs font-bold uppercase tracking-wider rounded-full hover:bg-gray-800 transition-colors shadow-sm no-underline"
+                className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20 no-underline"
               >
                 Login
               </Link>

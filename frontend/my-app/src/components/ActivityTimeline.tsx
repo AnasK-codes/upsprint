@@ -24,11 +24,11 @@ export default function ActivityTimeline({
   const getIcon = (type: Activity["type"]) => {
     switch (type) {
       case "rank_up":
-        return <TrendingUp className="w-5 h-5 text-indigo-500" />;
+        return <TrendingUp className="w-5 h-5 text-emerald-500" />;
       case "badge_unlock":
         return <Award className="w-5 h-5 text-amber-500" />;
       case "streak_milestone":
-        return <Zap className="w-5 h-5 text-purple-500" />;
+        return <Zap className="w-5 h-5 text-cyan-500" />;
       case "solve":
         return <CheckCircle className="w-5 h-5 text-green-500" />;
       default:
@@ -39,11 +39,11 @@ export default function ActivityTimeline({
   const getBgColor = (type: Activity["type"]) => {
     switch (type) {
       case "rank_up":
-        return "bg-indigo-50 border-indigo-100";
+        return "bg-emerald-50 border-emerald-100";
       case "badge_unlock":
         return "bg-amber-50 border-amber-100";
       case "streak_milestone":
-        return "bg-purple-50 border-purple-100";
+        return "bg-cyan-50 border-cyan-100";
       case "solve":
         return "bg-green-50 border-green-100";
       default:
@@ -77,13 +77,13 @@ export default function ActivityTimeline({
               {getIcon(activity.type)}
             </div>
             <div>
-              <h4 className="font-semibold text-gray-900 text-sm">
+              <h4 className="font-semibold text-slate-900 text-sm">
                 {activity.title}
               </h4>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <p className="text-sm text-slate-500 mt-0.5">
                 {activity.description}
               </p>
-              <div className="text-xs text-gray-400 mt-2 font-medium">
+              <div className="text-xs text-slate-400 mt-2 font-medium">
                 {new Date(activity.date).toLocaleDateString(undefined, {
                   month: "short",
                   day: "numeric",
