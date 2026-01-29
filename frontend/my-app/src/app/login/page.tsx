@@ -4,13 +4,14 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import AnimatedButton from "@/components/AnimatedButton";
 import { api } from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
-import { Mail, Lock, LogIn, ChevronRight, AlertCircle } from "lucide-react";
+import { AlertCircle, LogIn } from "lucide-react";
 import { AuroraBackground } from "@/components/AuroraBackground";
-import { FloatingLabelInput } from "@/components/FloatingLabelInput";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/utils/cn";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -54,84 +55,69 @@ export default function LoginPage() {
 
   return (
     <AuroraBackground className="pt-20 sm:pt-24">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-md p-4"
-      >
-        <div className="glass-panel overflow-hidden rounded-3xl p-8 shadow-2xl border border-white/50 bg-white/60 backdrop-blur-xl">
-          <div className="mb-8 text-center">
+      <div className="w-full max-w-md mx-auto rounded-none md:rounded-2xl p-4 md:p-8 shadow-input bg-white">
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+            className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/30"
+          >
+            <LogIn className="h-8 w-8" />
+          </motion.div>
+          <h2 className="font-bold text-xl text-neutral-800">Welcome Back</h2>
+          <p className="text-neutral-600 text-sm max-w-sm mt-2 mx-auto">
+            Enter your credentials to access your workspace
+          </p>
+        </div>
+
+        <form className="my-8" onSubmit={handleSubmit}>
+          <LabelInputContainer className="mb-4">
+            <Label htmlFor="email">Email Address</Label>
+            <Input
+              id="email"
+              placeholder="pcSorkar@magic.com"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+          </LabelInputContainer>
+          <LabelInputContainer className="mb-8">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              placeholder="••••••••"
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+          </LabelInputContainer>
+
+          {formError && (
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200, damping: 15 }}
-              className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/30"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600 border border-red-100"
             >
-              <LogIn className="h-8 w-8" />
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <p>{formError}</p>
             </motion.div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-              Welcome Back
-            </h1>
-            <p className="mt-2 text-sm text-slate-500 font-medium">
-              Enter your credentials to access your workspace
-            </p>
-          </div>
+          )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-              <FloatingLabelInput
-                label="Email address"
-                type="email"
-                name="email"
-                icon={<Mail className="w-5 h-5" />}
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-              <FloatingLabelInput
-                label="Password"
-                type="password"
-                name="password"
-                icon={<Lock className="w-5 h-5" />}
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <button
+            className="group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset]"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Log In"}
+            <BottomGradient />
+          </button>
 
-            {formError && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600 border border-red-100"
-              >
-                <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                <p>{formError}</p>
-              </motion.div>
-            )}
-
-            <div className="pt-2">
-              <AnimatedButton
-                type="submit"
-                isLoading={loading}
-                className="w-full h-12 text-base"
-              >
-                Log In <ChevronRight className="h-4 w-4 ml-1" />
-              </AnimatedButton>
-            </div>
-          </form>
-
-          <div className="my-8 relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-slate-200" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase tracking-widest">
-              <span className="bg-transparent px-2 text-slate-400 font-bold backdrop-blur-xl">
-                Or continue with
-              </span>
-            </div>
-          </div>
+          <div className="bg-gradient-to-r from-transparent via-neutral-300 to-transparent my-8 h-[1px] w-full" />
 
           <motion.button
             whileHover={{ scale: 1.02, y: -1 }}
@@ -140,9 +126,9 @@ export default function LoginPage() {
             onClick={() => {
               window.location.href = "http://localhost:4000/auth/google";
             }}
-            className="flex w-full items-center justify-center gap-3 rounded-xl border border-cyan-500 bg-white py-3 font-semibold text-[#1E3A8A] shadow-sm transition-all hover:bg-cyan-50 hover:shadow-cyan-500/10"
+            className="group/btn shadow-input relative flex h-10 w-full items-center justify-start space-x-2 rounded-md bg-gray-50 px-4 font-medium text-black"
           >
-            <svg className="h-5 w-5" viewBox="0 0 24 24">
+            <svg className="h-4 w-4" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                 fill="#4285F4"
@@ -160,20 +146,46 @@ export default function LoginPage() {
                 fill="#EA4335"
               />
             </svg>
-            Continue with Google
+            <span className="text-sm text-neutral-700">
+              Continue with Google
+            </span>
+            <BottomGradient />
           </motion.button>
 
-          <p className="mt-8 text-center text-sm text-slate-500">
-            Don't have an account?{" "}
+          <p className="mt-4 text-center text-sm text-neutral-600">
+            Don&apos;t have an account?{" "}
             <Link
               href="/signup"
-              className="font-semibold text-indigo-600 hover:text-indigo-500 hover:underline transition-all"
+              className="font-bold text-indigo-600 hover:underline"
             >
               Sign up free
             </Link>
           </p>
-        </div>
-      </motion.div>
+        </form>
+      </div>
     </AuroraBackground>
   );
 }
+
+const BottomGradient = () => {
+  return (
+    <>
+      <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
+      <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
+    </>
+  );
+};
+
+const LabelInputContainer = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <div className={cn("flex flex-col space-y-2 w-full", className)}>
+      {children}
+    </div>
+  );
+};

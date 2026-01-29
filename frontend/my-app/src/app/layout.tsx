@@ -1,11 +1,21 @@
+import { Outfit } from "next/font/google";
 import "../styles/globals.css";
 import Navbar from "../components/Navbar";
 import { ToastProvider } from "../hooks/useToast";
 import { AuthProvider } from "../hooks/useAuth";
 
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+  display: "swap",
+});
+
 export const metadata = {
   title: "UpSprint",
   description: "Competitive Programming Leaderboard",
+  icons: {
+    icon: "/icon-circle.png",
+  },
 };
 
 export default function RootLayout({
@@ -15,7 +25,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="bg-[var(--background)] text-[var(--foreground)] min-h-screen flex flex-col">
+      <body
+        className={`${outfit.variable} font-sans bg-[var(--background)] text-[var(--foreground)] min-h-screen flex flex-col`}
+      >
         <ToastProvider>
           <AuthProvider>
             <Navbar />

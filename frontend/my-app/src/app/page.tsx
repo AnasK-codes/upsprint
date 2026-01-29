@@ -17,6 +17,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
+import { AuroraBackground } from "@/components/AuroraBackground";
+import { CometCard } from "@/components/ui/comet-card";
+import { Cover } from "@/components/ui/cover";
 
 export default function Home() {
   const { isAuthenticated, loading } = useAuth();
@@ -70,26 +73,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center text-center px-4 relative overflow-hidden pt-36">
-      {/* Aurora Background - Optimized with Floating Animation */}
-      <div className="fixed inset-0 -z-10 overflow-hidden bg-slate-50/50 pointer-events-none">
-        <motion.div
-          animate={{ x: [0, 100, 0], y: [0, -50, 0], rotate: [0, 10, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[100vw] h-[50vh] bg-indigo-200/40 rounded-[100%] blur-[80px] md:blur-[120px] mix-blend-multiply"
-        />
-        <motion.div
-          animate={{ x: [0, -100, 0], y: [0, 50, 0], rotate: [0, -10, 0] }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute bottom-0 right-0 w-[80vw] h-[60vh] bg-cyan-200/40 rounded-[100%] blur-[80px] md:blur-[120px] mix-blend-multiply"
-        />
-        <motion.div
-          animate={{ x: [0, 50, 0], y: [0, 50, 0], scale: [1, 1.1, 1] }}
-          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-          className="absolute top-1/2 left-0 w-[60vw] h-[40vh] bg-blue-200/40 rounded-[100%] blur-[70px] md:blur-[100px] mix-blend-multiply"
-        />
-      </div>
-
+    <AuroraBackground className="pt-36 px-4 overflow-hidden text-center">
       <motion.div
         variants={container}
         initial="hidden"
@@ -113,41 +97,45 @@ export default function Home() {
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-5xl sm:text-7xl font-extrabold tracking-tight text-[#0F172A] leading-[1.1]"
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-slate-900"
           >
-            Stop Coding in <span className="text-[#0F172A]">Silence.</span>
+            Stop Coding in{" "}
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-cyan-500">
+              Silence.
+            </span>
             <br />
             Start{" "}
-            <span className="relative inline-block">
-              <span className="absolute -inset-2 bg-indigo-100 rounded-lg blur-xl opacity-50 animate-pulse"></span>
-              <span className="relative text-transparent bg-clip-text bg-gradient-to-r from-[#1E3A8A] to-[#06B6D4] animate-gradient-x">
-                Competing.
-              </span>
-            </span>
+            <Cover className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900">
+              Competing.
+            </Cover>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-lg sm:text-xl text-[#475569] max-w-2xl mx-auto leading-relaxed"
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="max-w-2xl mx-auto text-lg sm:text-xl text-slate-600 mt-6 leading-relaxed"
           >
-            Stop guessing. Connect <strong>LeetCode</strong> &{" "}
-            <strong>Codeforces</strong> to rank yourself instantly. Turn coding
-            into a competitive sport and let consistency be your unfair
+            Connect{" "}
+            <span className="font-semibold text-slate-800">LeetCode</span> &{" "}
+            <span className="font-semibold text-slate-800">Codeforces</span> to
+            see exactly where you stand.
+            <br className="hidden sm:block" />
+            Turn daily coding into a sport and let consistency be your unfair
             advantage.
           </motion.p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
             <Link
               href="/leaderboard"
-              className="group relative px-8 py-4 bg-white text-[#1E3A8A] border-2 border-cyan-500 rounded-full font-bold text-lg shadow-sm hover:shadow-cyan-500/20 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+              className="group relative inline-flex h-12 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-slate-50"
             >
-              <div className="relative flex items-center gap-2">
+              <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
+              <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-slate-950/90 px-8 py-1 text-sm font-medium text-white backdrop-blur-3xl transition-all group-hover:bg-slate-950/80 gap-2">
                 See Who's Ahead
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </div>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </span>
             </Link>
             {!isAuthenticated && (
               <Link
@@ -208,84 +196,76 @@ export default function Home() {
               desc: "Turn peer pressure into fuel by outscoring your batchmates every day.",
             },
           ].map((f, i) => (
-            <div
-              key={i}
-              className="group relative p-8 bg-white/40 backdrop-blur-xl rounded-3xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(59,130,246,0.1)] transition-all duration-500 hover:-translate-y-1 overflow-hidden"
-              onMouseMove={handleMouseMove}
-            >
-              <motion.div
-                className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 transition duration-300 group-hover:opacity-100"
-                style={{
-                  background: useMotionTemplate`
-                    radial-gradient(
-                      650px circle at ${mouseX}px ${mouseY}px,
-                      rgba(6, 182, 212, 0.1),
-                      transparent 80%
-                    )
-                  `,
-                }}
-              />
-              <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-6 text-2xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                {f.icon}
+            <CometCard key={i} className="h-full">
+              <div className="relative p-8 h-full bg-white/70 backdrop-blur-xl rounded-3xl border border-white/60 shadow-lg flex flex-col items-start justify-start">
+                <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-6 text-2xl">
+                  {f.icon}
+                </div>
+                <h3 className="font-bold text-[#0F172A] text-lg mb-2 relative z-10">
+                  {f.title}
+                </h3>
+                <p className="text-[#475569] leading-relaxed relative z-10">
+                  {f.desc}
+                </p>
               </div>
-              <h3 className="font-bold text-[#0F172A] text-lg mb-2 relative z-10">
-                {f.title}
-              </h3>
-              <p className="text-[#475569] leading-relaxed relative z-10">
-                {f.desc}
-              </p>
-            </div>
+            </CometCard>
           ))}
         </motion.div>
 
         {/* Why UpSprint Section */}
         <motion.div
           variants={item}
-          className="pt-32 pb-20 max-w-3xl mx-auto text-center space-y-12"
+          className="pt-32 pb-20 max-w-6xl mx-auto text-center space-y-12"
         >
           <h2 className="text-3xl sm:text-4xl font-bold text-[#0F172A]">
             Why UpSprint?
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-            <div className="space-y-4 p-6 rounded-2xl bg-white/30 border border-white/40 shadow-sm hover:shadow-md transition-all">
-              <div className="h-12 w-12 rounded-full bg-indigo-50 flex items-center justify-center text-[#1E3A8A]">
-                <MousePointer2 className="w-6 h-6" />
+            <CometCard className="h-full">
+              <div className="relative p-8 h-full bg-white/70 backdrop-blur-xl rounded-3xl border border-white/60 shadow-lg flex flex-col items-start justify-start space-y-4">
+                <div className="h-12 w-12 rounded-full bg-indigo-50 flex items-center justify-center text-[#1E3A8A]">
+                  <MousePointer2 className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-xl text-[#0F172A]">
+                  Stop "Tab-Switching"
+                </h3>
+                <p className="text-[#475569] leading-relaxed">
+                  Checking 10 different profiles on 3 sites is exhausting. Save
+                  your energy for the actual problems.
+                </p>
               </div>
-              <h3 className="font-bold text-xl text-[#0F172A]">
-                Stop "Tab-Switching"
-              </h3>
-              <p className="text-[#475569] leading-relaxed">
-                Checking 10 different profiles on 3 sites is exhausting. Save
-                your energy for the actual problems.
-              </p>
-            </div>
+            </CometCard>
 
-            <div className="space-y-4 p-6 rounded-2xl bg-white/30 border border-white/40 shadow-sm hover:shadow-md transition-all">
-              <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                <Globe className="w-6 h-6" />
+            <CometCard className="h-full">
+              <div className="relative p-8 h-full bg-white/70 backdrop-blur-xl rounded-3xl border border-white/60 shadow-lg flex flex-col items-start justify-start space-y-4">
+                <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                  <Globe className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-xl text-slate-900">
+                  Isolation Kills Growth
+                </h3>
+                <p className="text-slate-600 leading-relaxed">
+                  Without accountability, streaks die. When you see your friends
+                  grinding, you'll grind too.
+                </p>
               </div>
-              <h3 className="font-bold text-xl text-slate-900">
-                Isolation Kills Growth
-              </h3>
-              <p className="text-slate-600 leading-relaxed">
-                Without accountability, streaks die. When you see your friends
-                grinding, you'll grind too.
-              </p>
-            </div>
+            </CometCard>
 
-            <div className="space-y-4 p-6 rounded-2xl bg-white/30 border border-white/40 shadow-sm hover:shadow-md transition-all">
-              <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
-                <Zap className="w-6 h-6" />
+            <CometCard className="h-full">
+              <div className="relative p-8 h-full bg-white/70 backdrop-blur-xl rounded-3xl border border-white/60 shadow-lg flex flex-col items-start justify-start space-y-4">
+                <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                  <Zap className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-xl text-slate-900">
+                  Make Effort Visible
+                </h3>
+                <p className="text-slate-600 leading-relaxed">
+                  Don't let your late-night debugging sessions go unnoticed.
+                  Prove your dedication daily.
+                </p>
               </div>
-              <h3 className="font-bold text-xl text-slate-900">
-                Make Effort Visible
-              </h3>
-              <p className="text-slate-600 leading-relaxed">
-                Don't let your late-night debugging sessions go unnoticed. Prove
-                your dedication daily.
-              </p>
-            </div>
+            </CometCard>
           </div>
 
           <div className="pt-12">
@@ -296,6 +276,6 @@ export default function Home() {
           </div>
         </motion.div>
       </motion.div>
-    </div>
+    </AuroraBackground>
   );
 }

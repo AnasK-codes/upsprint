@@ -4,21 +4,13 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import AnimatedButton from "@/components/AnimatedButton";
-import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
 import { api } from "@/services/api";
-import {
-  Mail,
-  Lock,
-  User,
-  Briefcase,
-  ChevronRight,
-  AlertCircle,
-  Building2,
-} from "lucide-react";
 import { AuroraBackground } from "@/components/AuroraBackground";
-import { FloatingLabelInput } from "@/components/FloatingLabelInput";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/utils/cn";
+import { AlertCircle } from "lucide-react";
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -44,12 +36,12 @@ export default function SignupPage() {
     setFormError("");
 
     if (formData.password !== formData.confirmPassword) {
-      setFormError("Passwords do not match");
+      setFormError("Passwords same daliye ji!");
       return;
     }
 
     if (formData.password.length < 6) {
-      setFormError("Password must be at least 6 characters");
+      setFormError("Password 6 se jada characters dal bro!");
       return;
     }
 
@@ -64,12 +56,12 @@ export default function SignupPage() {
         branch: formData.branch,
       });
 
-      success("Account created! Redirecting to login...");
+      success("Account bangaya! Login karne ke liye redirecting...");
       setTimeout(() => {
         router.push("/login");
       }, 1500);
     } catch (err: any) {
-      setFormError(err.message || "Something went wrong. Please try again.");
+      setFormError(err.message || "Kuchh galti hai. Fir se try karein.");
     } finally {
       setLoading(false);
     }
@@ -77,129 +69,144 @@ export default function SignupPage() {
 
   return (
     <AuroraBackground className="pt-20 sm:pt-24">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-lg p-4 py-8"
-      >
-        <div className="glass-panel overflow-hidden rounded-3xl p-8 shadow-2xl border border-white/50 bg-white/60 backdrop-blur-xl">
-          <div className="mb-8 text-center">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200, damping: 15 }}
-              className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/30"
-            >
-              <User className="h-8 w-8" />
-            </motion.div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-              Create Account
-            </h1>
-            <p className="mt-2 text-sm text-slate-500 font-medium">
-              Join the community and start your journey
-            </p>
-          </div>
+      <div className="w-full max-w-md mx-auto rounded-none md:rounded-2xl p-4 md:p-8 shadow-input bg-white">
+        <h2 className="font-bold text-xl text-neutral-800">Create Account</h2>
+        <p className="text-neutral-600 text-sm max-w-sm mt-2">
+          Join the community and start your journey
+        </p>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <FloatingLabelInput
-              label="Full Name"
+        <form className="my-8" onSubmit={handleSubmit}>
+          <LabelInputContainer className="mb-4">
+            <Label htmlFor="name">Full Name</Label>
+            <Input
+              id="name"
+              placeholder="Your Name"
               type="text"
               name="name"
-              icon={<User className="w-5 h-5" />}
               value={formData.name}
               onChange={handleChange}
               required
             />
-
-            <FloatingLabelInput
-              label="Email address"
+          </LabelInputContainer>
+          <LabelInputContainer className="mb-4">
+            <Label htmlFor="email">Email Address</Label>
+            <Input
+              id="email"
+              placeholder="batman@gotham.com"
               type="email"
               name="email"
-              icon={<Mail className="w-5 h-5" />}
               value={formData.email}
               onChange={handleChange}
               required
             />
+          </LabelInputContainer>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FloatingLabelInput
-                label="Batch (e.g. 2025)"
+          <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mb-4">
+            <LabelInputContainer>
+              <Label htmlFor="batch">Batch</Label>
+              <Input
+                id="batch"
+                placeholder="2025"
                 type="text"
                 name="batch"
-                icon={<Briefcase className="w-5 h-5" />}
                 value={formData.batch}
                 onChange={handleChange}
               />
-              <FloatingLabelInput
-                label="Branch (optional)"
+            </LabelInputContainer>
+            <LabelInputContainer>
+              <Label htmlFor="branch">Branch (optional)</Label>
+              <Input
+                id="branch"
+                placeholder="IT"
                 type="text"
                 name="branch"
-                icon={<Building2 className="w-5 h-5" />}
                 value={formData.branch}
                 onChange={handleChange}
               />
-            </div>
+            </LabelInputContainer>
+          </div>
 
-            <FloatingLabelInput
-              label="Password"
+          <LabelInputContainer className="mb-4">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              placeholder="••••••••"
               type="password"
               name="password"
-              icon={<Lock className="w-5 h-5" />}
               value={formData.password}
               onChange={handleChange}
               required
             />
-
-            <FloatingLabelInput
-              label="Confirm Password"
+          </LabelInputContainer>
+          <LabelInputContainer className="mb-8">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Input
+              id="confirmPassword"
+              placeholder="••••••••"
               type="password"
               name="confirmPassword"
-              icon={<Lock className="w-5 h-5 checked:text-green-500" />}
               value={formData.confirmPassword}
               onChange={handleChange}
-              errorMessage={
-                formData.confirmPassword &&
-                formData.password !== formData.confirmPassword
-                  ? "Passwords do not match"
-                  : ""
-              }
               required
             />
+          </LabelInputContainer>
 
-            {formError && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600 border border-red-100"
-              >
-                <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                <p>{formError}</p>
-              </motion.div>
-            )}
+          {formError && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600 border border-red-100"
+            >
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <p>{formError}</p>
+            </motion.div>
+          )}
 
-            <div className="pt-2">
-              <AnimatedButton
-                type="submit"
-                isLoading={loading}
-                className="w-full h-12 text-base"
-              >
-                Create Account <ChevronRight className="h-4 w-4 ml-1" />
-              </AnimatedButton>
-            </div>
-          </form>
+          <button
+            className="group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset]"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Creating Account..." : "Create Account"}
+            <BottomGradient />
+          </button>
 
-          <p className="mt-8 text-center text-sm text-gray-500">
+          <div className="bg-gradient-to-r from-transparent via-neutral-300 to-transparent my-8 h-[1px] w-full" />
+
+          <p className="text-center text-sm text-neutral-600">
             Already have an account?{" "}
             <Link
               href="/login"
-              className="font-semibold text-indigo-600 hover:text-indigo-500 hover:underline transition-all"
+              className="font-bold text-indigo-600 hover:underline"
             >
               Log in
             </Link>
           </p>
-        </div>
-      </motion.div>
+        </form>
+      </div>
     </AuroraBackground>
   );
 }
+
+const BottomGradient = () => {
+  return (
+    <>
+      <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
+      <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
+    </>
+  );
+};
+
+const LabelInputContainer = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <div className={cn("flex flex-col space-y-2 w-full", className)}>
+      {children}
+    </div>
+  );
+};
