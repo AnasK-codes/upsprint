@@ -18,8 +18,42 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { AuroraBackground } from "@/components/AuroraBackground";
-import { CometCard } from "@/components/ui/comet-card";
 import { Cover } from "@/components/ui/cover";
+import { CometCard } from "@/components/ui/comet-card";
+import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
+
+const testimonials = [
+  {
+    quote:
+      "I used to solve 1 problem a week. Since joining UpSprint, I've maintained a 45-day streak. The social pressure is real.",
+    name: "Alex Chen",
+    title: "Software Engineer at Google",
+  },
+  {
+    quote:
+      "Seeing my friends top the leaderboard at 2 AM motivates me to push one more commit. It's concise, effective, and addictive.",
+    name: "Sarah Jones",
+    title: "CS Student, Stanford",
+  },
+  {
+    quote:
+      "Finally, a platform that understands competitive programming isn't just about logic—it's about consistency. My rating went up by 200 points.",
+    name: "Rahul Gupta",
+    title: "Competitive Programmer (Grandmaster)",
+  },
+  {
+    quote:
+      "The UI is clean, the stats are instant, and the competition is fierce. UpSprint turned my LeetCode grind into a sport.",
+    name: "Emily Davis",
+    title: "Frontend Developer",
+  },
+  {
+    quote:
+      "It's like Strava for coding. I can't imagine starting my day without checking who's ahead on the leaderboard.",
+    name: "Michael Brown",
+    title: "Backend Dev",
+  },
+];
 
 export default function Home() {
   const { isAuthenticated, loading } = useAuth();
@@ -266,6 +300,17 @@ export default function Home() {
                 </p>
               </div>
             </CometCard>
+          </div>
+
+          <div className="pt-20 pb-10 w-full overflow-hidden">
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#0F172A] mb-10">
+              Trusted by 500+ Coders
+            </h2>
+            <InfiniteMovingCards
+              items={testimonials}
+              direction="right"
+              speed="slow"
+            />
           </div>
 
           <div className="pt-12">

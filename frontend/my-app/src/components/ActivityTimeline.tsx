@@ -52,47 +52,50 @@ export default function ActivityTimeline({
   };
 
   return (
-    <div className="relative border-l-2 border-gray-100 ml-4 space-y-8 py-2">
+    <div className="relative pl-4 py-2 space-y-6">
+      {/* Connector Line */}
+      <div className="absolute top-4 bottom-4 left-[23px] w-[2px] bg-slate-100" />
+
       {activities.map((activity, index) => (
         <motion.div
           key={activity.id}
-          initial={{ opacity: 0, x: -20 }}
+          initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: index * 0.1, duration: 0.4 }}
-          className="relative pl-8"
+          transition={{ delay: index * 0.05, duration: 0.3 }}
+          className="relative group pl-8"
         >
           {/* Timeline Dot */}
           <div
-            className={`absolute -left-[11px] w-6 h-6 rounded-full border-4 border-white shadow-sm flex items-center justify-center ${getBgColor(activity.type)}`}
-          >
-            <div className="w-2 h-2 rounded-full bg-current opacity-50" />
-          </div>
+            className={`absolute left-[14px] top-4 w-5 h-5 rounded-full border-[3px] border-white shadow-sm z-10 box-content ${
+              activity.type === "rank_up"
+                ? "bg-emerald-500"
+                : activity.type === "badge_unlock"
+                  ? "bg-amber-500"
+                  : activity.type === "streak_milestone"
+                    ? "bg-cyan-500"
+                    : "bg-indigo-500"
+            }`}
+          />
 
           {/* Card */}
-          <motion.div
-            whileHover={{ scale: 1.01, x: 4 }}
-            className={`p-4 rounded-xl border shadow-sm flex items-start gap-4 transition-colors ${getBgColor(activity.type)} bg-opacity-40 backdrop-blur-sm`}
-          >
-            <div className="p-2 bg-white rounded-lg shadow-sm">
-              {getIcon(activity.type)}
-            </div>
-            <div>
-              <h4 className="font-semibold text-slate-900 text-sm">
-                {activity.title}
-              </h4>
-              <p className="text-sm text-slate-500 mt-0.5">
-                {activity.description}
-              </p>
-              <div className="text-xs text-slate-400 mt-2 font-medium">
+          <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all group-hover:translate-x-1">
+            <div className="flex justify-between items-start gap-4">
+              <div className="flex-1">
+                <h4 className="font-bold text-slate-800 text-sm mb-1">
+                  {activity.title}
+                </h4>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  {activity.description}
+                </p>
+              </div>
+              <div className="text-xs font-mono font-medium text-slate-400 bg-slate-50 px-2 py-1 rounded-lg whitespace-nowrap">
                 {new Date(activity.date).toLocaleDateString(undefined, {
                   month: "short",
                   day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
                 })}
               </div>
             </div>
-          </motion.div>
+          </div>
         </motion.div>
       ))}
     </div>

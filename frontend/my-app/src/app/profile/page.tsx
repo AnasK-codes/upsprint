@@ -9,6 +9,7 @@ import PlatformCard from "../../components/PlatformCard";
 import BadgeCard, { Badge } from "../../components/BadgeCard";
 import ActivityTimeline, { Activity } from "../../components/ActivityTimeline";
 import { motion, AnimatePresence } from "framer-motion";
+import { Zap, Award, Lock } from "lucide-react";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -173,14 +174,18 @@ export default function ProfilePage() {
 
         {/* Gamification Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between px-2">
-              <h2 className="text-xl font-bold text-slate-900">
-                Live Activity
-              </h2>
-            </div>
+          {/* Activity Timeline */}
+          <div className="lg:col-span-2 space-y-6">
+            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
+                <Zap className="w-4 h-4 text-orange-600" />
+              </div>
+              Live Activity
+            </h3>
             {activities.length > 0 ? (
-              <ActivityTimeline activities={activities} />
+              <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-xl shadow-slate-200/50">
+                <ActivityTimeline activities={activities} />
+              </div>
             ) : (
               <div className="p-8 text-center text-slate-500 bg-white/50 rounded-2xl border border-dashed border-slate-200">
                 No recent activity found. Solve some problems!
@@ -188,17 +193,33 @@ export default function ProfilePage() {
             )}
           </div>
 
-          <div className="lg:col-span-1 space-y-4 text-center">
-            {/* Coming Soon badges */}
-            <div className="p-6 bg-gradient-to-br from-indigo-50 to-cyan-50 rounded-2xl border border-indigo-100">
-              <h3 className="font-bold text-indigo-900 mb-2">Badges</h3>
-              <p className="text-sm text-indigo-600 mb-4">
-                Complete challenges to earn badges. Coming soon!
-              </p>
-              <div className="flex justify-center gap-2 opacity-50">
-                <div className="w-10 h-10 rounded-full bg-white/50" />
-                <div className="w-10 h-10 rounded-full bg-white/50" />
-                <div className="w-10 h-10 rounded-full bg-white/50" />
+          {/* Badges / Sidebar */}
+          <div className="space-y-6">
+            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
+                <Award className="w-4 h-4 text-indigo-600" />
+              </div>
+              Badges
+            </h3>
+            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2rem] p-8 text-white relative overflow-hidden shadow-2xl">
+              {/* Background Glows */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 rounded-full blur-3xl opacity-20 -mr-10 -mt-10" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500 rounded-full blur-3xl opacity-20 -ml-10 -mb-10" />
+
+              <div className="relative z-10 flex flex-col items-center text-center space-y-4 py-8">
+                <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 mb-2">
+                  <Lock className="w-8 h-8 text-indigo-300" />
+                </div>
+                <h4 className="text-2xl font-bold">Achievements Vault</h4>
+                <p className="text-slate-400 text-sm leading-relaxed max-w-[200px]">
+                  Complete weekly challenges and daily streaks to unlock
+                  exclusive badges.
+                  <br />
+                  <br />
+                  <span className="text-indigo-300 font-semibold uppercase text-xs tracking-widest border border-indigo-500/30 px-3 py-1 rounded-full bg-indigo-500/10">
+                    Coming Soon
+                  </span>
+                </p>
               </div>
             </div>
           </div>

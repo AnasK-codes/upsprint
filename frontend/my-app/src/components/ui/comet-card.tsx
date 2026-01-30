@@ -54,7 +54,7 @@ export const CometCard = ({
   const glareY = useTransform(mouseYSpring, [-0.5, 0.5], [0, 100]);
 
   const opacity = useMotionValue(0);
-  const glareBackground = useMotionTemplate`radial-gradient(circle at ${glareX}% ${glareY}%, rgba(6, 182, 212, 0.3) 0%, rgba(59, 130, 246, 0.1) 20%, transparent 80%)`;
+  const glareBackground = useMotionTemplate`radial-gradient(600px circle at ${glareX}% ${glareY}%, rgba(6, 182, 212, 0.2) 0%, rgba(59, 130, 246, 0.1) 50%, transparent 80%)`;
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!ref.current) return;

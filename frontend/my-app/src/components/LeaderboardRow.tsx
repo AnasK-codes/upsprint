@@ -70,14 +70,13 @@ export default function LeaderboardRow({
   const getRankStyles = (rank: number) => {
     switch (rank) {
       case 1:
-      case 1:
-        return "bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200 shadow-emerald-100/50";
+        return "bg-gradient-to-r from-[#FFFBEB]/60 via-white/50 to-[#FFF7ED]/60 border-yellow-200/80 shadow-[0_0_20px_-5px_rgba(251,191,36,0.2)]";
       case 2:
-        return "bg-gradient-to-r from-gray-50 to-slate-100 border-slate-200 shadow-slate-100/50";
+        return "bg-gradient-to-r from-slate-50/60 via-white/50 to-slate-100/60 border-slate-200/80 shadow-[0_0_20px_-5px_rgba(148,163,184,0.15)]";
       case 3:
-        return "bg-gradient-to-r from-orange-50 to-orange-100/50 border-orange-200 shadow-orange-100/50";
+        return "bg-gradient-to-r from-orange-50/60 via-white/50 to-orange-100/60 border-orange-200/80 shadow-[0_0_20px_-5px_rgba(249,115,22,0.15)]";
       default:
-        return "bg-white border-gray-100 hover:bg-gray-50";
+        return "bg-white/40 border-white/50 hover:bg-white/60";
     }
   };
 
@@ -193,17 +192,20 @@ export default function LeaderboardRow({
         stiffness: 100,
       }}
       whileHover={{
-        scale: 1.02,
-        backgroundColor: isStreakBroken ? "#f9fafb" : undefined,
-        boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)",
+        scale: 1.01,
+        y: -1,
+        backgroundColor: "rgba(255, 255, 255, 0.6)",
+        borderColor: "rgba(255, 255, 255, 0.8)",
+        boxShadow: "0 10px 40px -10px rgba(0,0,0,0.05)",
         zIndex: 10,
         opacity: 1,
       }}
       className={twMerge(
-        "relative flex items-center p-4 rounded-xl border-2 transition-colors mb-3",
+        "relative flex items-center p-4 rounded-3xl border transition-all mb-3 backdrop-blur-md",
         getRankStyles(entry.rank),
-        isStreakBroken &&
-          "grayscale-[0.5] border-dashed border-gray-200 bg-gray-50/50",
+        isStreakBroken
+          ? "grayscale-[0.5] border-dashed border-slate-300/50 bg-slate-50/30"
+          : "shadow-sm",
       )}
     >
       {/* Rank Indicator */}

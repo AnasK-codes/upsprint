@@ -45,19 +45,19 @@ export default function ProfileCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-3xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-xl"
+      className="relative overflow-hidden rounded-[2.5rem] bg-white shadow-xl shadow-slate-200/50 border border-slate-100"
     >
-      {/* Background Decor */}
-      <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-indigo-500 via-cyan-500 to-blue-500 opacity-90" />
+      {/* Premium Header Gradient */}
+      <div className="absolute top-0 left-0 w-full h-48 bg-[#0F172A]">
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20" />
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent" />
+      </div>
 
-      <div className="relative px-8 pt-20 pb-8">
-        <div className="flex flex-col md:flex-row items-end md:items-start gap-6">
+      <div className="relative px-8 md:px-12 pt-28 pb-10">
+        <div className="flex flex-col md:flex-row items-end md:items-start gap-8">
           {/* Avatar */}
-          <motion.div
-            className="relative"
-            whileHover={{ scale: 1.05, rotate: 2 }}
-          >
-            <div className="w-32 h-32 rounded-3xl border-4 border-white shadow-2xl overflow-hidden bg-white">
+          <motion.div className="relative" whileHover={{ scale: 1.02 }}>
+            <div className="w-40 h-40 rounded-[2rem] border-[6px] border-white shadow-2xl overflow-hidden bg-white relative z-10">
               <img
                 src={
                   formData.avatarUrl ||
@@ -72,77 +72,83 @@ export default function ProfileCard({
               />
             </div>
             {!isEditing && (
-              <div className="absolute -bottom-3 -right-3 bg-white p-2 rounded-xl shadow-lg border border-slate-100">
-                <span className="text-xl">🎓</span>
+              <div className="absolute -bottom-2 -right-2 z-20 bg-indigo-600 text-white p-2.5 rounded-2xl shadow-lg border-[4px] border-white">
+                <Trophy className="w-5 h-5" />
               </div>
             )}
           </motion.div>
 
           {/* Info & Edit Form */}
-          <div className="flex-1 w-full pt-2 md:pt-12">
+          <div className="flex-1 w-full pt-4 md:pt-14">
             <div className="flex justify-between items-start">
               <div className="w-full">
                 {isEditing ? (
-                  <div className="range-group space-y-4 max-w-md">
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                        Name
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl bg-slate-50 p-6 rounded-3xl border border-slate-200">
+                    <div className="col-span-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">
+                        Full Name
                       </label>
                       <input
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
-                        className="w-full mt-1 p-2 bg-white/50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                        className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-semibold text-slate-900"
+                        placeholder="John Doe"
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                          Batch
-                        </label>
-                        <input
-                          name="batch"
-                          value={formData.batch}
-                          onChange={handleChange}
-                          className="w-full mt-1 p-2 bg-white/50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                          Branch
-                        </label>
-                        <input
-                          name="branch"
-                          value={formData.branch}
-                          onChange={handleChange}
-                          className="w-full mt-1 p-2 bg-white/50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                        />
-                      </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">
+                        Batch
+                      </label>
+                      <input
+                        name="batch"
+                        value={formData.batch}
+                        onChange={handleChange}
+                        className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                        placeholder="2024"
+                      />
                     </div>
                     <div>
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">
+                        Branch
+                      </label>
+                      <input
+                        name="branch"
+                        value={formData.branch}
+                        onChange={handleChange}
+                        className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                        placeholder="CSE"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">
                         Avatar URL
                       </label>
                       <input
                         name="avatarUrl"
                         value={formData.avatarUrl}
                         onChange={handleChange}
-                        className="w-full mt-1 p-2 bg-white/50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-mono"
+                        className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-mono text-slate-600"
+                        placeholder="https://..."
                       />
                     </div>
                   </div>
                 ) : (
                   <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-3">
                       {user.name || "Anonymous User"}
                     </h1>
-                    <div className="flex items-center gap-2 text-slate-500 font-medium mt-1">
-                      <span>{user.batch || "Batch N/A"}</span>
-                      <span>•</span>
-                      <span>{user.branch || "Branch N/A"}</span>
-                    </div>
-                    <div className="mt-1 text-sm text-slate-400 font-mono">
-                      {user.email}
+                    <div className="flex flex-wrap items-center gap-3 text-slate-500 font-medium">
+                      <span className="bg-slate-100 px-3 py-1 rounded-lg text-slate-600 text-sm font-bold border border-slate-200">
+                        {user.batch || "Batch N/A"}
+                      </span>
+                      <span className="bg-slate-100 px-3 py-1 rounded-lg text-slate-600 text-sm font-bold border border-slate-200">
+                        {user.branch || "Branch N/A"}
+                      </span>
+                      <span className="text-slate-300">•</span>
+                      <span className="text-slate-400 font-mono text-sm">
+                        {user.email}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -152,18 +158,22 @@ export default function ProfileCard({
                 onClick={isEditing ? handleSave : () => setIsEditing(true)}
                 disabled={saving}
                 className={clsx(
-                  "p-2 rounded-xl transition-all shadow-sm",
+                  "p-3 rounded-2xl transition-all shadow-sm flex items-center gap-2 font-bold text-sm ml-4",
                   isEditing
-                    ? "bg-[#1E3A8A] text-white hover:bg-[#3B82F6] shadow-md hover:shadow-indigo-500/20"
-                    : "bg-white text-[#1E3A8A] border border-cyan-500 hover:bg-cyan-50 shadow-sm hover:shadow-cyan-500/10",
+                    ? "bg-slate-900 text-white hover:bg-slate-800 shadow-xl shadow-slate-900/10"
+                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:border-slate-300",
                 )}
               >
                 {saving ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : isEditing ? (
-                  <Save className="w-5 h-5" />
+                  <>
+                    <Save className="w-4 h-4" /> Save Attributes
+                  </>
                 ) : (
-                  <Edit2 className="w-5 h-5" />
+                  <>
+                    <Edit2 className="w-4 h-4" /> Edit Profile
+                  </>
                 )}
               </button>
             </div>
@@ -172,38 +182,58 @@ export default function ProfileCard({
 
         {/* Highlight Stats */}
         {!isEditing && (
-          <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-slate-100">
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-              <div className="flex items-center gap-2 mb-1">
-                <Trophy className="w-4 h-4 text-slate-500" />
-                <span className="text-xs font-bold text-slate-600 uppercase">
-                  Rank
-                </span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-12">
+            <div className="group bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Trophy className="w-24 h-24 text-emerald-500 rotate-12" />
               </div>
-              <div className="text-2xl font-black text-[#0F172A]">
-                {stats?.rank ? `#${stats.rank}` : "--"}
-              </div>
-            </div>
-            <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
-              <div className="flex items-center gap-2 mb-1">
-                <Target className="w-4 h-4 text-[#1E3A8A]" />
-                <span className="text-xs font-bold text-[#1E3A8A] uppercase">
-                  Score
-                </span>
-              </div>
-              <div className="text-2xl font-black text-[#0F172A]">
-                {stats?.score ?? "--"}
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-2 text-emerald-600 font-bold uppercase tracking-wider text-xs">
+                  <Trophy className="w-4 h-4" /> Global Rank
+                </div>
+                <div className="text-4xl font-black text-slate-900 tracking-tight">
+                  {stats?.rank ? `#${stats.rank}` : "--"}
+                </div>
+                <div className="mt-2 text-sm text-slate-400 font-medium">
+                  Top {stats?.rank ? "1%" : "--"} of players
+                </div>
               </div>
             </div>
-            <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
-              <div className="flex items-center gap-2 mb-1">
-                <Zap className="w-4 h-4 text-emerald-600" />
-                <span className="text-xs font-bold text-emerald-700 uppercase">
-                  Streak
-                </span>
+
+            <div className="group bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Target className="w-24 h-24 text-indigo-500 rotate-12" />
               </div>
-              <div className="text-2xl font-black text-[#0F172A]">
-                {stats?.streak ? `${stats.streak} Days` : "--"}
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-2 text-indigo-600 font-bold uppercase tracking-wider text-xs">
+                  <Target className="w-4 h-4" /> Total Score
+                </div>
+                <div className="text-4xl font-black text-slate-900 tracking-tight">
+                  {stats?.score?.toLocaleString() ?? "--"}
+                </div>
+                <div className="mt-2 text-sm text-slate-400 font-medium">
+                  Points accumulated
+                </div>
+              </div>
+            </div>
+
+            <div className="group bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-orange-500/5 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Zap className="w-24 h-24 text-orange-500 rotate-12" />
+              </div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-2 text-orange-600 font-bold uppercase tracking-wider text-xs">
+                  <Zap className="w-4 h-4" /> Active Streak
+                </div>
+                <div className="text-4xl font-black text-slate-900 tracking-tight">
+                  {stats?.streak ? `${stats.streak}` : "0"}{" "}
+                  <span className="text-2xl text-slate-400 font-bold">
+                    Days
+                  </span>
+                </div>
+                <div className="mt-2 text-sm text-slate-400 font-medium">
+                  Keep it going!
+                </div>
               </div>
             </div>
           </div>

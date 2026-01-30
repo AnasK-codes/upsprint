@@ -10,6 +10,7 @@ import GroupManagementModal from "@/components/GroupManagementModal";
 import GroupDetails from "@/components/GroupDetails";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Plus, Users } from "lucide-react";
+import { AuroraBackground } from "@/components/AuroraBackground";
 
 export default function LeaderboardPage() {
   const router = useRouter();
@@ -175,295 +176,289 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-indigo-50/50 via-white to-cyan-50/50 pt-24 sm:pt-32 pb-12 px-6">
-      <AnimatePresence>
-        {showWelcome && (
-          <WelcomeAnimation onComplete={() => setShowWelcome(false)} />
-        )}
-      </AnimatePresence>
+    <AuroraBackground>
+      <div className="relative z-10 min-h-screen pt-24 sm:pt-32 pb-12 px-6">
+        <AnimatePresence>
+          {showWelcome && (
+            <WelcomeAnimation onComplete={() => setShowWelcome(false)} />
+          )}
+        </AnimatePresence>
 
-      <div className="max-w-5xl mx-auto space-y-8">
-        {/* Header Section */}
-        <div className="flex flex-col items-center text-center space-y-4 pt-4">
-          <motion.h1
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-cyan-600 flex items-center gap-3"
-          >
-            <span>🔥</span> Leaderboard
-          </motion.h1>
+        <div className="max-w-5xl mx-auto space-y-8">
+          {/* Header Section */}
+          <div className="flex flex-col items-center text-center space-y-4 pt-4">
+            <motion.h1
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 flex items-center gap-3"
+            >
+              <span className="text-indigo-500">🔥</span> Leaderboard
+            </motion.h1>
 
-          <motion.p
-            key={activeTab}
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-slate-500 max-w-lg text-lg"
-          >
-            {activeTab === "leetcode"
-              ? "Rankings based only on LeetCode performance."
-              : activeTab === "daily"
-                ? "Users ranked by current daily streak."
-                : activeTab === "groups"
-                  ? "Rankings within your private groups."
-                  : "See who's currently topping the charts across all platforms."}
-          </motion.p>
+            <motion.p
+              key={activeTab}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-slate-600 max-w-lg text-lg"
+            >
+              {activeTab === "leetcode"
+                ? "Rankings based only on LeetCode performance."
+                : activeTab === "daily"
+                  ? "Users ranked by current daily streak."
+                  : activeTab === "groups"
+                    ? "Rankings within your private groups."
+                    : "See who's currently topping the charts across all platforms."}
+            </motion.p>
 
-          {/* Animated Tabs */}
-          <div className="flex p-1 bg-slate-50/50 backdrop-blur-md border border-slate-200 rounded-full shadow-sm relative mt-6 overflow-x-auto max-w-full">
-            {(["global", "leetcode", "daily", "groups"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => handleTabChange(tab)}
-                className={`relative px-6 py-2.5 text-sm font-medium rounded-full transition-colors z-10 ${
-                  activeTab === tab
-                    ? "text-[#1E3A8A]"
-                    : "text-[#475569] hover:text-[#1E3A8A]"
-                }`}
-              >
-                {activeTab === tab && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute inset-0 bg-white rounded-full shadow-sm border border-cyan-500/30"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                    style={{ zIndex: -1 }}
+            {/* Glassy Animated Tabs */}
+            <div className="flex p-1 bg-white/20 backdrop-blur-3xl border border-white/40 rounded-full shadow-lg shadow-black/5 relative mt-8 overflow-x-auto max-w-full">
+              {(["global", "leetcode", "daily", "groups"] as const).map(
+                (tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => handleTabChange(tab)}
+                    className={`relative px-6 py-2.5 text-sm font-medium rounded-full transition-colors z-10 ${
+                      activeTab === tab
+                        ? "text-slate-900"
+                        : "text-slate-500 hover:text-slate-900"
+                    }`}
+                  >
+                    {activeTab === tab && (
+                      <motion.div
+                        layoutId="activeTab"
+                        className="absolute inset-0 bg-white/80 shadow-sm border border-white/50 rounded-full"
+                        transition={{
+                          type: "spring",
+                          bounce: 0.2,
+                          duration: 0.6,
+                        }}
+                        style={{ zIndex: -1 }}
+                      />
+                    )}
+                    <span className="relative z-10 capitalize">
+                      {tab === "daily" ? "Daily Activity" : tab}
+                    </span>
+                  </button>
+                ),
+              )}
+            </div>
+
+            {/* Filters */}
+            {activeTab !== "groups" && (
+              <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
+                <FilterDropdown
+                  label="Batch"
+                  options={[
+                    "All",
+                    "2021",
+                    "2022",
+                    "2023",
+                    "2024",
+                    "2025",
+                    "2026",
+                    "2027",
+                    "2028",
+                    "2029",
+                    "2030",
+                  ]}
+                  value={filters.batch}
+                  onChange={(val) => updateFilters("batch", val)}
+                />
+                <FilterDropdown
+                  label="Branch"
+                  options={["All", "CSE", "IT", "ECE", "ME", "EE", "CE", "CHE"]}
+                  value={filters.branch}
+                  onChange={(val) => updateFilters("branch", val)}
+                />
+                {activeTab !== "leetcode" && (
+                  <FilterDropdown
+                    label="Platform"
+                    options={["All", "LeetCode", "Codeforces", "CodeChef"]}
+                    value={filters.platform}
+                    onChange={(val) => updateFilters("platform", val)}
                   />
                 )}
-                <span className="relative z-10 capitalize">
-                  {tab === "daily" ? "Daily Activity" : tab}
-                </span>
-              </button>
-            ))}
+              </div>
+            )}
+
+            {/* Group Selector & Actions */}
+            {activeTab === "groups" && (
+              <div className="flex flex-col items-center gap-6 mt-6 w-full max-w-md mx-auto">
+                {groups.length > 0 ? (
+                  <div className="relative w-full z-20">
+                    <GroupSelector
+                      groups={groups}
+                      selectedId={selectedGroupId}
+                      onSelect={(id) => {
+                        setSelectedGroupId(id);
+                        setPage(1);
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="bg-indigo-50/50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+                      <Users className="w-8 h-8 text-indigo-500" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      No Groups Yet
+                    </h3>
+                    <p className="text-slate-500 max-w-xs mx-auto mt-1 mb-6">
+                      Join a group to compete with friends or create your own
+                      private leaderboard.
+                    </p>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setShowGroupModal(true)}
+                  className="flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-xl hover:shadow-slate-900/20 transform hover:-translate-y-0.5 active:translate-y-0"
+                >
+                  <Plus className="w-5 h-5" />
+                  {groups.length > 0
+                    ? "New / Join Group"
+                    : "Create or Join Group"}
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Filters */}
-          {activeTab !== "groups" && (
-            <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
-              <FilterDropdown
-                label="Batch"
-                options={[
-                  "All",
-                  "2021",
-                  "2022",
-                  "2023",
-                  "2024",
-                  "2025",
-                  "2026",
-                  "2027",
-                  "2028",
-                  "2029",
-                ]}
-                value={filters.batch}
-                onChange={(val) => updateFilters("batch", val)}
-              />
-              <FilterDropdown
-                label="Branch"
-                options={["All", "CSE", "IT", "ECE", "ME", "EE", "CE", "CHE"]}
-                value={filters.branch}
-                onChange={(val) => updateFilters("branch", val)}
-              />
-              {activeTab !== "leetcode" && (
-                <FilterDropdown
-                  label="Platform"
-                  options={["All", "LeetCode", "Codeforces", "CodeChef"]}
-                  value={filters.platform}
-                  onChange={(val) => updateFilters("platform", val)}
+          {/* Group Details View */}
+          {activeTab === "groups" && selectedGroupId && (
+            <div className="max-w-4xl mx-auto">
+              {groups.find((g) => g.id === selectedGroupId) && (
+                <GroupDetails
+                  group={groups.find((g) => g.id === selectedGroupId)!}
+                  onLeave={() => {
+                    const updatedGroups = groups.filter(
+                      (g) => g.id !== selectedGroupId,
+                    );
+                    setGroups(updatedGroups);
+                    setSelectedGroupId(
+                      updatedGroups.length > 0 ? updatedGroups[0].id : null,
+                    );
+                  }}
                 />
               )}
+
+              {/* Metric Selector - Bento Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
+                {[
+                  { id: "score", label: "Global Score" },
+                  { id: "activity_today", label: "Activity (Today)" },
+                  { id: "activity_7d", label: "Activity (7d)" },
+                  { id: "leetcode_streak", label: "Streak" },
+                  { id: "total_solved", label: "Total Solved" },
+                  { id: "contest_rating", label: "Rating" },
+                ].map((m) => {
+                  const isActive = metric === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setMetric(m.id as any)}
+                      className={`relative flex items-center justify-center px-4 py-4 rounded-2xl text-sm font-bold transition-all duration-300 outline-none group overflow-hidden ${
+                        isActive
+                          ? "text-indigo-700 shadow-lg shadow-indigo-500/10 scale-[1.02] ring-1 ring-indigo-500/20"
+                          : "text-slate-500 hover:text-slate-700 hover:bg-white/40"
+                      }`}
+                    >
+                      {isActive ? (
+                        <motion.div
+                          layoutId="activeMetric"
+                          className="absolute inset-0 bg-white/80 backdrop-blur-xl rounded-2xl"
+                          transition={{
+                            type: "spring",
+                            bounce: 0.2,
+                            duration: 0.6,
+                          }}
+                          style={{ zIndex: 0 }}
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-white/20 border border-white/30 rounded-2xl transition-colors group-hover:bg-white/40" />
+                      )}
+
+                      <span className="relative z-10 flex items-center gap-2">
+                        {m.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
 
-          {/* Group Selector & Actions */}
-          {activeTab === "groups" && (
-            <div className="flex flex-col items-center gap-6 mt-6">
-              {groups.length > 0 ? (
-                <div className="w-full max-w-md">
-                  <div className="relative">
-                    <select
-                      value={selectedGroupId || ""}
-                      onChange={(e) => {
-                        setSelectedGroupId(Number(e.target.value));
-                        setPage(1);
-                      }}
-                      className="w-full appearance-none bg-white border border-gray-300 text-gray-700 py-3 px-4 pr-10 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-medium"
-                    >
-                      {groups.map((group) => (
-                        <option key={group.id} value={group.id}>
-                          {group.name}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                      <ChevronDown className="h-5 w-5" />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="bg-indigo-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                    <Users className="w-8 h-8 text-indigo-500" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    No Groups Yet
-                  </h3>
-                  <p className="text-gray-500 max-w-xs mx-auto mt-1 mb-6">
-                    Join a group to compete with friends or create your own
-                    private leaderboard.
-                  </p>
-                </div>
-              )}
-
-              <button
-                onClick={() => setShowGroupModal(true)}
-                className="flex items-center gap-2 px-6 py-2.5 bg-[#1E3A8A] text-white rounded-full font-medium hover:bg-[#3B82F6] transition-colors shadow-lg hover:shadow-indigo-500/20 transform hover:-translate-y-0.5 active:translate-y-0"
-              >
-                <Plus className="w-4 h-4" />
-                {groups.length > 0
-                  ? "New / Join Group"
-                  : "Create or Join Group"}
-              </button>
+          {loading ? (
+            <div className="space-y-4">
+              <div className="h-12 bg-white/50 rounded-lg w-full animate-pulse" />
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full bg-white/40" />
+              ))}
             </div>
+          ) : (
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-4"
+            >
+              {(activeTab !== "groups" ||
+                (activeTab === "groups" && selectedGroupId)) && (
+                <>
+                  <LeaderboardTable
+                    rows={data}
+                    type={
+                      activeTab === "groups"
+                        ? metric
+                        : activeTab === "daily"
+                          ? "streak"
+                          : "score"
+                    }
+                  />
+
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-200/50">
+                    <button
+                      onClick={handlePrev}
+                      disabled={page === 1}
+                      className="px-4 py-2 text-sm font-medium text-slate-700 bg-white/50 border border-white/60 rounded-xl hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                    >
+                      &larr; Previous
+                    </button>
+                    <span className="text-sm text-slate-500">
+                      Page{" "}
+                      <span className="font-medium text-slate-900">{page}</span>
+                    </span>
+                    <button
+                      onClick={handleNext}
+                      disabled={data.length < pageSize}
+                      className="px-4 py-2 text-sm font-medium text-slate-700 bg-white/50 border border-white/60 rounded-xl hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                    >
+                      Next &rarr;
+                    </button>
+                  </div>
+                </>
+              )}
+            </motion.div>
           )}
         </div>
 
-        {/* Group Details View */}
-        {activeTab === "groups" && selectedGroupId && (
-          <div className="max-w-4xl mx-auto">
-            {groups.find((g) => g.id === selectedGroupId) && (
-              <GroupDetails
-                group={groups.find((g) => g.id === selectedGroupId)!}
-                onLeave={() => {
-                  // Remove group from local state and select another one if available
-                  const updatedGroups = groups.filter(
-                    (g) => g.id !== selectedGroupId,
-                  );
-                  setGroups(updatedGroups);
-                  setSelectedGroupId(
-                    updatedGroups.length > 0 ? updatedGroups[0].id : null,
-                  );
-                }}
-              />
-            )}
-
-            {/* Metric Selector */}
-            <div className="bg-white p-1 rounded-2xl shadow-sm border border-gray-200/60 flex flex-wrap gap-1 mb-8 overflow-x-auto">
-              {[
-                { id: "score", label: "Global Score", icon: "🏆" },
-                { id: "activity_today", label: "Activity (Today)", icon: "⚡" },
-                { id: "activity_7d", label: "Activity (7d)", icon: "📅" },
-                { id: "leetcode_streak", label: "Streak", icon: "🔥" },
-                { id: "total_solved", label: "Total Solved", icon: "✅" },
-                { id: "contest_rating", label: "Rating", icon: "📈" },
-              ].map((m) => {
-                const isActive = metric === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    onClick={() => setMetric(m.id as any)}
-                    className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex-1 whitespace-nowrap justify-center outline-none ${
-                      isActive
-                        ? "text-white shadow-md transform scale-[1.02]"
-                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-                    }`}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeMetric"
-                        className="absolute inset-0 bg-gray-900 rounded-xl"
-                        transition={{
-                          type: "spring",
-                          bounce: 0.15,
-                          duration: 0.5,
-                        }}
-                        style={{ zIndex: 0 }}
-                      />
-                    )}
-                    <span className="relative z-10 flex items-center gap-2">
-                      <span className="text-base">{m.icon}</span>
-                      {m.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {loading ? (
-          <div className="space-y-4">
-            {/* Header Skeleton */}
-            <div className="h-12 bg-gray-100 rounded-lg w-full animate-pulse" />
-            {/* Rows Skeleton */}
-            {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
-            ))}
-          </div>
-        ) : (
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-4"
-          >
-            {/* Show leaderboard if not groups tab OR if groups tab has a selected group */}
-            {(activeTab !== "groups" ||
-              (activeTab === "groups" && selectedGroupId)) && (
-              <>
-                <LeaderboardTable
-                  rows={data}
-                  type={
-                    activeTab === "groups"
-                      ? metric
-                      : activeTab === "daily"
-                        ? "streak"
-                        : "score"
+        <AnimatePresence>
+          {showGroupModal && (
+            <GroupManagementModal
+              onClose={() => setShowGroupModal(false)}
+              onGroupJoined={() => {
+                api.getUserGroups().then((res) => {
+                  setGroups(res);
+                  if (res.length > 0) {
+                    setSelectedGroupId(res[res.length - 1].id);
                   }
-                />
-
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <button
-                    onClick={handlePrev}
-                    disabled={page === 1}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    &larr; Previous
-                  </button>
-                  <span className="text-sm text-gray-500">
-                    Page{" "}
-                    <span className="font-medium text-gray-900">{page}</span>
-                  </span>
-                  <button
-                    onClick={handleNext}
-                    disabled={data.length < pageSize}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Next &rarr;
-                  </button>
-                </div>
-              </>
-            )}
-          </motion.div>
-        )}
+                });
+              }}
+            />
+          )}
+        </AnimatePresence>
       </div>
-
-      <AnimatePresence>
-        {showGroupModal && (
-          <GroupManagementModal
-            onClose={() => setShowGroupModal(false)}
-            onGroupJoined={() => {
-              // Refresh groups
-              api.getUserGroups().then((res) => {
-                setGroups(res);
-                // Select the newest group (last one)
-                if (res.length > 0) {
-                  setSelectedGroupId(res[res.length - 1].id);
-                }
-              });
-            }}
-          />
-        )}
-      </AnimatePresence>
-    </div>
+    </AuroraBackground>
   );
 }
 
@@ -495,10 +490,10 @@ function FilterDropdown({
     <div className="relative" ref={ref}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md ${
           value !== "All"
-            ? "bg-indigo-50 text-[#1E3A8A] border border-indigo-200"
-            : "bg-white text-slate-600 border border-slate-200 hover:border-slate-300"
+            ? "bg-indigo-50/80 text-indigo-700 border border-indigo-200 shadow-sm"
+            : "bg-white/40 text-slate-600 border border-white/60 hover:bg-white/60 shadow-sm"
         }`}
       >
         <span>
@@ -516,7 +511,7 @@ function FilterDropdown({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute top-full left-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50 overflow-hidden"
+            className="absolute top-full left-0 mt-2 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 py-2 z-50 overflow-hidden"
           >
             {options.map((option) => (
               <button
@@ -525,13 +520,100 @@ function FilterDropdown({
                   onChange(option);
                   setIsOpen(false);
                 }}
-                className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
                   value === option
                     ? "bg-indigo-50 text-indigo-700 font-medium"
-                    : "text-gray-600 hover:bg-gray-50"
+                    : "text-slate-600 hover:bg-slate-50"
                 }`}
               >
                 {option}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function GroupSelector({
+  groups,
+  selectedId,
+  onSelect,
+}: {
+  groups: Group[];
+  selectedId: number | null;
+  onSelect: (id: number) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selectedGroup = groups.find((g) => g.id === selectedId);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-6 py-4 bg-white/60 backdrop-blur-xl border border-white/60 text-slate-900 rounded-2xl shadow-lg shadow-indigo-500/5 hover:bg-white/80 transition-all group"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-md">
+            <Users className="w-5 h-5" />
+          </div>
+          <div className="text-left">
+            <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Selected Group
+            </span>
+            <span className="block text-lg font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">
+              {selectedGroup?.name || "Select Group"}
+            </span>
+          </div>
+        </div>
+        <ChevronDown
+          className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.98 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/50 py-2 z-50 overflow-hidden"
+          >
+            {groups.map((group) => (
+              <button
+                key={group.id}
+                onClick={() => {
+                  onSelect(group.id);
+                  setIsOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-6 py-3.5 transition-all ${
+                  selectedId === group.id
+                    ? "bg-indigo-50/80 text-indigo-900"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+              >
+                <span className="font-semibold">{group.name}</span>
+                {selectedId === group.id && (
+                  <motion.div
+                    layoutId="check"
+                    className="w-2 h-2 rounded-full bg-indigo-500"
+                  />
+                )}
               </button>
             ))}
           </motion.div>

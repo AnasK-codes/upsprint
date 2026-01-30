@@ -46,24 +46,47 @@ export default function PlatformCard({
   return (
     <motion.div
       layout
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -4, scale: 1.01 }}
       className={clsx(
-        "relative group flex flex-col justify-between p-6 rounded-2xl border transition-all h-40",
+        "relative group flex flex-col justify-between p-6 rounded-3xl border transition-all h-44 overflow-hidden",
         isConnected
-          ? getLightTheme(platform)
-          : "bg-white border-dashed border-gray-200 hover:border-gray-300",
+          ? "bg-white border-slate-200 shadow-sm hover:shadow-2xl"
+          : "bg-slate-50 border-dashed border-slate-200 hover:border-slate-300 hover:bg-white",
+        // Platform specific hover glows
+        isConnected &&
+          platform.toLowerCase() === "leetcode" &&
+          "hover:shadow-orange-500/10 hover:border-orange-200",
+        isConnected &&
+          platform.toLowerCase() === "codeforces" &&
+          "hover:shadow-blue-500/10 hover:border-blue-200",
+        isConnected &&
+          platform.toLowerCase() === "codechef" &&
+          "hover:shadow-amber-500/10 hover:border-amber-200",
       )}
     >
-      <div className="flex justify-between items-start">
+      {/* Background Decor (Subtle) */}
+      {isConnected && (
         <div
           className={clsx(
-            "w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg bg-gradient-to-br",
+            "absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-0 group-hover:opacity-10 transition-opacity blur-3xl",
+            platform.toLowerCase() === "leetcode" && "bg-orange-500",
+            platform.toLowerCase() === "codeforces" && "bg-blue-500",
+            platform.toLowerCase() === "codechef" && "bg-amber-500",
+          )}
+        />
+      )}
+
+      <div className="flex justify-between items-start relative z-10">
+        <div
+          className={clsx(
+            "w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg transition-transform group-hover:scale-105 bg-gradient-to-br",
             isConnected
               ? getTheme(platform)
-              : "from-gray-100 to-gray-200 text-gray-400 shadow-none grayscale",
+              : "from-slate-200 to-slate-200 text-slate-400 shadow-none",
           )}
         >
-          {platform.substring(0, 2).toUpperCase()}
+          {/* Logo or Initials */}
+          {platform.substring(0, 1)}
         </div>
 
         {isConnected ? (
@@ -72,38 +95,51 @@ export default function PlatformCard({
               e.stopPropagation();
               onDisconnect();
             }}
-            className="p-1.5 rounded-full bg-white/50 hover:bg-red-100 hover:text-red-500 transition-colors"
+            className="p-2 rounded-full text-slate-300 hover:bg-red-50 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+            title="Disconnect"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         ) : (
-          <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-300 group-hover:bg-indigo-50 group-hover:text-indigo-500 transition-colors">
+          <div className="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-300 group-hover:text-indigo-500 group-hover:border-indigo-100 transition-colors shadow-sm">
             <Plus className="w-5 h-5" />
           </div>
         )}
       </div>
 
-      <div>
+      <div className="relative z-10">
         <h3
           className={clsx(
-            "font-bold text-lg capitalize",
-            isConnected ? "" : "text-gray-400 group-hover:text-gray-600",
+            "font-black text-xl tracking-tight mb-1",
+            isConnected
+              ? "text-slate-900"
+              : "text-slate-400 group-hover:text-slate-600 transition-colors",
           )}
         >
           {platform}
         </h3>
 
         {isConnected ? (
-          <div className="flex items-center gap-1.5 mt-1 font-medium opacity-80 decoration-slice">
-            <span className="truncate">@{username}</span>
-            <Check className="w-3 h-3" />
+          <div className="flex items-center gap-2">
+            <span
+              className={clsx(
+                "inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold border",
+                getLightTheme(platform),
+              )}
+            >
+              <Check className="w-3 h-3" /> Connected
+            </span>
+            <span className="text-xs font-medium text-slate-400 truncate max-w-[100px]">
+              @{username}
+            </span>
           </div>
         ) : (
           <button
             onClick={onConnect}
-            className="mt-2 text-sm font-semibold text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
+            className="mt-1 text-sm font-bold text-indigo-600 flex items-center gap-1 group/btn"
           >
-            Connect Account <ExternalLink className="w-3 h-3" />
+            Connect Now{" "}
+            <ExternalLink className="w-3 h-3 transition-transform group-hover/btn:translate-x-0.5" />
           </button>
         )}
       </div>

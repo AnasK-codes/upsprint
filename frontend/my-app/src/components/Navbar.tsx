@@ -55,6 +55,7 @@ export default function Navbar() {
               src="/icon-circle.png"
               alt="UpSprint Logo"
               fill
+              sizes="40px"
               className="object-cover scale-125"
             />
           </div>
