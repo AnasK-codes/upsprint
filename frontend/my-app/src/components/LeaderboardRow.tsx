@@ -17,12 +17,14 @@ interface LeaderboardRowProps {
     | "leetcode_streak"
     | "total_solved"
     | "contest_rating";
+  rankChange?: "up" | "down" | "same" | "new";
 }
 
 export default function LeaderboardRow({
   entry,
   index,
   type = "score",
+  rankChange = "same",
 }: LeaderboardRowProps) {
   const isTop3 = entry.rank <= 3;
 
@@ -163,6 +165,40 @@ export default function LeaderboardRow({
       );
     }
 
+    // Platform Specific Scores
+    if (entry.scoreType === "leetcode") {
+      return (
+        <div className="flex flex-col items-end">
+          <div className="flex items-center gap-1.5 text-orange-500 font-bold">
+            <span className="text-xs text-orange-400">Rating:</span>
+            <span>{Math.round(entry.score || 0)}</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (entry.scoreType === "codeforces") {
+      return (
+        <div className="flex flex-col items-end">
+          <div className="flex items-center gap-1.5 text-blue-600 font-bold">
+            <span className="text-xs text-blue-400">Rating:</span>
+            <span>{entry.score}</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (entry.scoreType === "codechef") {
+      return (
+        <div className="flex flex-col items-end">
+          <div className="flex items-center gap-1.5 text-amber-900 font-bold">
+            <span className="text-xs text-amber-700">Rating:</span>
+            <span>{entry.score}</span>
+          </div>
+        </div>
+      );
+    }
+
     // Default Score
     return (
       <div className="flex flex-col items-end">
@@ -181,15 +217,33 @@ export default function LeaderboardRow({
 
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, y: 20, scale: 0.98 }}
-      animate={{ opacity: isStreakBroken ? 0.7 : 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0 }}
+      animate={{
+        opacity: isStreakBroken ? 0.7 : 1,
+        y:
+          rankChange === "up"
+            ? [0, -4, 0]
+            : rankChange === "down"
+              ? [0, 4, 0]
+              : 0,
+        backgroundColor:
+          rankChange === "up"
+            ? [
+                "rgba(255,255,255,0.6)",
+                "rgba(16, 185, 129, 0.1)",
+                "rgba(255,255,255,0.6)",
+              ]
+            : rankChange === "down"
+              ? [
+                  "rgba(255,255,255,0.6)",
+                  "rgba(239, 68, 68, 0.1)",
+                  "rgba(255,255,255,0.6)",
+                ]
+              : "rgba(255, 255, 255, 0.6)",
+      }}
       transition={{
-        delay: index * 0.05,
         duration: 0.3,
-        type: "spring",
-        stiffness: 100,
+        ease: "easeOut",
       }}
       whileHover={{
         scale: 1.01,
@@ -201,7 +255,7 @@ export default function LeaderboardRow({
         opacity: 1,
       }}
       className={twMerge(
-        "relative flex items-center p-4 rounded-3xl border transition-all mb-3 backdrop-blur-md",
+        "relative flex items-center p-4 rounded-3xl border transition-all mb-3",
         getRankStyles(entry.rank),
         isStreakBroken
           ? "grayscale-[0.5] border-dashed border-slate-300/50 bg-slate-50/30"

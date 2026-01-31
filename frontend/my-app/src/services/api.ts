@@ -5,6 +5,7 @@ export interface LeaderboardEntry {
   id: number;
   rank: number;
   score?: number;
+  scoreType?: "normalized" | "leetcode" | "codeforces" | "codechef";
   currentStreak?: number;
   totalActiveDays?: number;
   lastActivityDate?: string;

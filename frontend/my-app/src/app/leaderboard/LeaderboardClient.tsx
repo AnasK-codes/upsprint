@@ -414,6 +414,17 @@ export default function LeaderboardPage() {
                           ? "streak"
                           : "score"
                     }
+                    headerLabel={
+                      activeTab === "leetcode"
+                        ? "LeetCode Rating"
+                        : filters.platform === "LeetCode"
+                          ? "LeetCode Rating"
+                          : filters.platform === "Codeforces"
+                            ? "Codeforces Rating"
+                            : filters.platform === "CodeChef"
+                              ? "CodeChef Rating"
+                              : undefined
+                    }
                   />
 
                   <div className="flex items-center justify-between pt-4 border-t border-slate-200/50">

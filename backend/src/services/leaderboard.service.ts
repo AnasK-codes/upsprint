@@ -135,6 +135,77 @@ export async function getLeetCodeLeaderboard(
   }));
 
   return mapped;
+  return mapped;
+}
+
+/**
+ * Generic leaderboard fetcher for any specific platform (LeetCode, Codeforces, CodeChef).
+ * Returns raw rating as score.
+ */
+export async function getPlatformLeaderboard(
+  platform: string,
+  page = 1,
+  limit = 50,
+  filters?: { batch?: string; branch?: string }
+) {
+  const skip = (page - 1) * limit;
+  const platformName = platform.toLowerCase();
+
+  const batchFilter = filters?.batch
+    ? Prisma.sql`AND u.batch = ${filters.batch}`
+    : Prisma.empty;
+  const branchFilter = filters?.branch
+    ? Prisma.sql`AND u.branch = ${filters.branch}`
+    : Prisma.empty;
+
+  // Query similar to LeetCode but generic
+  // We prioritize rating, then problemsSolved
+  const rows = await prisma.$queryRaw`
+    SELECT
+      u.id as "userId",
+      u.name,
+      u."avatarUrl",
+      ps.rating,
+      ps."problemsSolved",
+      ps."rankTitle",
+      la.username as "handle"
+    FROM "PlatformSnapshot" ps
+    JOIN "LinkedAccount" la ON la.id = ps."linkedAccountId"
+    JOIN "User" u ON u.id = la."userId"
+    JOIN (
+      SELECT "linkedAccountId", MAX("createdAt") AS maxc
+      FROM "PlatformSnapshot"
+      GROUP BY "linkedAccountId"
+    ) latest
+      ON ps."linkedAccountId" = latest."linkedAccountId"
+      AND ps."createdAt" = latest.maxc
+    WHERE la.platform = ${platformName}
+      ${batchFilter}
+      ${branchFilter}
+    ORDER BY ps.rating DESC NULLS LAST, ps."problemsSolved" DESC NULLS LAST
+    OFFSET ${skip}
+    LIMIT ${limit}
+  `;
+
+  // Map to common structure
+  const mapped = (rows as any[]).map((row, index) => ({
+    id: row.userId,
+    rank: skip + index + 1,
+    score: row.rating || 0,
+    scoreType: platformName,
+    user: {
+      id: row.userId,
+      name: row.name || row.handle || "Unknown",
+      avatarUrl: row.avatarUrl,
+      handle: row.handle
+    },
+    meta: {
+      rankTitle: row.rankTitle,
+      problemsSolved: row.problemsSolved
+    }
+  }));
+
+  return mapped;
 }
 
 export async function getDailyActivityLeaderboard(

@@ -4,6 +4,7 @@ import { rebuildLeaderboard } from "../jobs/leaderboard.job.js";
 import {
   getLeetCodeLeaderboard,
   getDailyActivityLeaderboard,
+  getPlatformLeaderboard,
 } from "../services/leaderboard.service.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { getCache, setCache, clearCachePrefix } from "../utils/cache.js";
@@ -40,7 +41,7 @@ const validateFilters = (req: any, res: any, next: any) => {
 const getCacheKey = (type: string, query: any) => {
   const { batch, branch, platform } = query;
   // Bump version to v2 to invalidate old cache
-  const parts = [`leaderboard:v2:${type}`];
+  const parts = [`leaderboard:v3:${type}`];
 
   if (batch && batch !== "All") parts.push(`batch=${batch}`);
   if (branch && branch !== "All") parts.push(`branch=${branch}`);
@@ -174,6 +175,20 @@ router.get("/", validateFilters, async (req, res) => {
       return res.json(cached);
     }
 
+    // If specific platform is requested, use platform-specific logic
+    if (platform && platform !== "all" && platform !== "All") {
+      const platformName = String(platform).toLowerCase();
+      const data = await getPlatformLeaderboard(platformName, page, limit, {
+        batch: batch as string,
+        branch: branch as string
+      });
+
+      const response = { page, limit, data };
+      setCache(cacheKey, response, 60);
+      return res.json(response);
+    }
+
+    // Fallback to Global Leaderboard (Normalized Scores)
     const where: any = {};
     const userWhere: any = {};
 
@@ -189,25 +204,29 @@ router.get("/", validateFilters, async (req, res) => {
       userWhere.branch = String(branch);
     }
 
-    if (platform && platform !== "all" && platform !== "All") {
-      userWhere.accounts = {
-        some: { platform: String(platform).toLowerCase() },
-      };
-    }
+    // Note: Global leaderboard already aggregates scores, so we don't strictly filter by platform 
+    // unless we want to filter users who HAVE that platform account but use their GLOBAL score.
+    // The requirement says "Global leaderboard uses normalizedScore", which implies aggregate.
+    // If a user provides ?platform=all, we return global ranking.
 
     if (Object.keys(userWhere).length > 0) {
       where.user = userWhere;
     }
 
-    const data = await prisma.leaderboard.findMany({
+    const rows = await prisma.leaderboard.findMany({
       where,
       orderBy: { rank: "asc" },
       skip,
       take: limit,
       include: {
-        user: { select: { id: true, name: true, email: true } },
+        user: { select: { id: true, name: true, email: true, avatarUrl: true } },
       },
     });
+
+    const data = rows.map(row => ({
+      ...row,
+      scoreType: "normalized"
+    }));
 
     const response = { page, limit, data };
     setCache(cacheKey, response, 60);
