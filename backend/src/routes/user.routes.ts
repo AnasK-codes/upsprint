@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.middleware.js";
-import { getProfile, updateProfile, connectAccount, disconnectAccount, getAccounts, getUserActivity } from "../controllers/user.controller.js";
+import { getProfile, updateProfile, connectAccount, disconnectAccount, getAccounts, getUserActivity, updateLeaderboardVisibility } from "../controllers/user.controller.js";
 
 const router = Router();
 
@@ -9,6 +9,9 @@ router.get("/me", authenticate, getProfile);
 
 /* PUT update user profile */
 router.put("/me", authenticate, updateProfile);
+
+/* PATCH update leaderboard visibility */
+router.patch("/leaderboard-visibility", authenticate, updateLeaderboardVisibility);
 
 /* POST connect a coding account */
 router.post("/accounts/connect", authenticate, connectAccount);

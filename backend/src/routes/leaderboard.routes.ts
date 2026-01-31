@@ -210,7 +210,14 @@ router.get("/", validateFilters, async (req, res) => {
     // If a user provides ?platform=all, we return global ranking.
 
     if (Object.keys(userWhere).length > 0) {
-      where.user = userWhere;
+      where.user = {
+        ...userWhere,
+        leaderboardVisibility: "GLOBAL_AND_GROUPS" as any
+      };
+    } else {
+      where.user = {
+        leaderboardVisibility: "GLOBAL_AND_GROUPS" as any
+      };
     }
 
     const rows = await prisma.leaderboard.findMany({
@@ -249,6 +256,12 @@ router.get("/top/:n", async (req, res) => {
     if (cached) return res.json(cached);
 
     const data = await prisma.leaderboard.findMany({
+      // STRICT: Only include users who have opted into global leaderboards
+      where: {
+        user: {
+          leaderboardVisibility: "GLOBAL_AND_GROUPS",
+        } as any,
+      },
       orderBy: { rank: "asc" },
       take: n,
       include: { user: { select: { id: true, name: true } } },
@@ -276,6 +289,11 @@ router.get("/user/:userId", async (req, res) => {
         },
       },
     });
+
+    // STRICT: If user exists but is hidden, treat as not found/not ranked globally
+    if (row && (row.user as any).leaderboardVisibility === "GROUPS_ONLY") {
+      return res.status(404).json({ message: "This user prefers to hide their accounts" });
+    }
 
     const accountWithMaxStreak = await prisma.linkedAccount.findFirst({
       where: { userId },

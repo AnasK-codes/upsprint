@@ -121,65 +121,67 @@ export default function GroupDetails({
       {/* Members Grid */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6 flex items-center gap-2">
-          <Users className="w-4 h-4" /> Group Members
+          <Users className="w-4 h-4" /> Group Members ({members.length})
         </h3>
 
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-20 bg-gray-50 rounded-xl animate-pulse"
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {members.map((member) => (
-              <motion.div
-                key={member.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-indigo-100 hover:shadow-md hover:shadow-indigo-50/50 transition-all bg-white group"
-              >
-                <div className="relative">
-                  {member.user.avatarUrl ? (
-                    <img
-                      src={member.user.avatarUrl}
-                      alt={member.user.name}
-                      className="w-12 h-12 rounded-full bg-gray-100 object-cover ring-2 ring-white shadow-sm"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-100 to-cyan-100 text-indigo-600 flex items-center justify-center font-bold text-lg ring-2 ring-white shadow-sm">
-                      {member.user.name[0]?.toUpperCase()}
-                    </div>
-                  )}
-                  {member.role === "ADMIN" && (
-                    <div
-                      className="absolute -bottom-1 -right-1 bg-amber-100 text-amber-600 p-1 rounded-full border-2 border-white"
-                      title="Admin"
-                    >
-                      <Shield className="w-3 h-3" />
-                    </div>
-                  )}
-                </div>
+        <div className="max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-20 bg-gray-50 rounded-xl animate-pulse"
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {members.map((member) => (
+                <motion.div
+                  key={member.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-indigo-100 hover:shadow-md hover:shadow-indigo-50/50 transition-all bg-white group"
+                >
+                  <div className="relative">
+                    {member.user.avatarUrl ? (
+                      <img
+                        src={member.user.avatarUrl}
+                        alt={member.user.name}
+                        className="w-12 h-12 rounded-full bg-gray-100 object-cover ring-2 ring-white shadow-sm"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-100 to-cyan-100 text-indigo-600 flex items-center justify-center font-bold text-lg ring-2 ring-white shadow-sm">
+                        {member.user.name[0]?.toUpperCase()}
+                      </div>
+                    )}
+                    {member.role === "ADMIN" && (
+                      <div
+                        className="absolute -bottom-1 -right-1 bg-amber-100 text-amber-600 p-1 rounded-full border-2 border-white"
+                        title="Admin"
+                      >
+                        <Shield className="w-3 h-3" />
+                      </div>
+                    )}
+                  </div>
 
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
-                    {member.user.name}
-                  </p>
-                  <p className="text-xs text-slate-500 truncate mt-0.5">
-                    Joined{" "}
-                    {new Date(member.joinedAt).toLocaleDateString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
+                      {member.user.name}
+                    </p>
+                    <p className="text-xs text-slate-500 truncate mt-0.5">
+                      Joined{" "}
+                      {new Date(member.joinedAt).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

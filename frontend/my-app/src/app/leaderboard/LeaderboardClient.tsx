@@ -60,8 +60,6 @@ export default function LeaderboardPage() {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const cache = useRef<{ [key: string]: LeaderboardEntry[] }>({});
-
   useEffect(() => {
     // Check for welcome animation
     const hasWelcomed = sessionStorage.getItem("has_welcomed");
@@ -72,19 +70,11 @@ export default function LeaderboardPage() {
 
     let isMounted = true;
 
-    // Create a cache key based on current state
-    const cacheKey = `${activeTab}-${page}-${JSON.stringify(filters)}-${selectedGroupId}-${metric}`;
-
-    // Check cache first
-    if (cache.current[cacheKey]) {
-      setData(cache.current[cacheKey]);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
     setLoading(true);
     setError(null);
+
+    // Create a cache key for logging or debugging if needed, but not unused
+    // const cacheKey = ...
 
     let fetcher;
     if (activeTab === "leetcode") {
@@ -112,8 +102,6 @@ export default function LeaderboardPage() {
     fetcher
       .then((res) => {
         if (isMounted) {
-          // Update cache
-          cache.current[cacheKey] = res.data;
           setData(res.data);
           setLoading(false);
         }

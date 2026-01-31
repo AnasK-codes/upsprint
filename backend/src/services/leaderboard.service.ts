@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import prisma from "../config/db.js";
 
+
 /**
  * Row shape returned by the raw SQL helper.
  * Matches SELECT in fetchLatestSnapshotsWithAccountUser()
@@ -114,6 +115,7 @@ export async function getLeetCodeLeaderboard(
       ON ps."linkedAccountId" = latest."linkedAccountId"
       AND ps."createdAt" = latest.maxc
     WHERE la.platform = 'leetcode'
+      AND u."leaderboardVisibility" = 'GLOBAL_AND_GROUPS'
       ${batchFilter}
       ${branchFilter}
     ORDER BY ps.rating DESC NULLS LAST, ps."problemsSolved" DESC NULLS LAST
@@ -180,6 +182,7 @@ export async function getPlatformLeaderboard(
       ON ps."linkedAccountId" = latest."linkedAccountId"
       AND ps."createdAt" = latest.maxc
     WHERE la.platform = ${platformName}
+      AND u."leaderboardVisibility" = 'GLOBAL_AND_GROUPS'
       ${batchFilter}
       ${branchFilter}
     ORDER BY ps.rating DESC NULLS LAST, ps."problemsSolved" DESC NULLS LAST
@@ -224,7 +227,8 @@ export async function getDailyActivityLeaderboard(
       user: {
         batch: filters?.batch,
         branch: filters?.branch,
-      },
+        leaderboardVisibility: "GLOBAL_AND_GROUPS",
+      } as any,
     },
     orderBy: [
       { currentStreak: "desc" },
@@ -243,7 +247,7 @@ export async function getDailyActivityLeaderboard(
     }
   });
 
-  return rows.map((row, index) => ({
+  return rows.map((row: any, index) => ({
     rank: skip + index + 1,
     user: row.user,
     currentStreak: row.currentStreak,

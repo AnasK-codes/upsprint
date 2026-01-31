@@ -38,19 +38,21 @@ export default function ProfilePage() {
       setUser(data);
       setError(null);
 
-      // Fetch dynamic stats
-      try {
-        const rankData = await api.getUserRank(data.id);
-        if (rankData) {
-          setStats({
-            rank: rankData.rank,
-            score: rankData.score || 0,
-            streak: rankData.currentStreak || 0,
-          });
+      // Fetch dynamic stats only if visible globally
+      if (data.leaderboardVisibility !== "GROUPS_ONLY") {
+        try {
+          const rankData = await api.getUserRank(data.id);
+          if (rankData) {
+            setStats({
+              rank: rankData.rank,
+              score: rankData.score || 0,
+              streak: rankData.currentStreak || 0,
+            });
+          }
+        } catch (e) {
+          // User might not be on leaderboard yet, ignore error
+          // console.error("Failed to fetch rank:", e);
         }
-      } catch (e) {
-        // User might not be on leaderboard yet, ignore error
-        // console.error("Failed to fetch rank:", e);
       }
 
       try {
@@ -76,7 +78,14 @@ export default function ProfilePage() {
 
   const handleUpdateProfile = async (data: Partial<UserProfile>) => {
     try {
-      const updatedUser = await api.updateProfile(data);
+      let updatedUser;
+      if (data.leaderboardVisibility) {
+        updatedUser = await api.updateLeaderboardVisibility(
+          data.leaderboardVisibility,
+        );
+      } else {
+        updatedUser = await api.updateProfile(data);
+      }
       setUser(updatedUser);
     } catch (err) {
       console.error(err);
@@ -169,6 +178,76 @@ export default function ProfilePage() {
                 />
               );
             })}
+          </div>
+        </div>
+
+        {/* Leaderboard Visibility */}
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 mb-4 px-2 flex items-center gap-2">
+            <Lock className="w-5 h-5 text-slate-500" />
+            Leaderboard Visibility
+          </h2>
+          <div className="bg-white rounded-[2rem] p-6 border border-slate-200 shadow-sm relative overflow-hidden">
+            <div className="flex flex-col gap-4">
+              <label className="flex items-start gap-4 cursor-pointer group">
+                <div className="relative flex items-center">
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value="GLOBAL_AND_GROUPS"
+                    checked={
+                      user.leaderboardVisibility === "GLOBAL_AND_GROUPS" ||
+                      !user.leaderboardVisibility
+                    }
+                    onChange={() =>
+                      handleUpdateProfile({
+                        leaderboardVisibility: "GLOBAL_AND_GROUPS",
+                      })
+                    }
+                    className="peer sr-only"
+                  />
+                  <div className="w-5 h-5 rounded-full border-2 border-slate-300 peer-checked:border-indigo-600 peer-checked:bg-indigo-600 transition-all relative">
+                    <div className="absolute inset-0 bg-white rounded-full transform scale-0 peer-checked:scale-50 transition-transform" />
+                  </div>
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-900 block group-hover:text-indigo-700 transition">
+                    Show my stats everywhere
+                  </span>
+                  <span className="text-slate-500 text-sm">
+                    Visible on global leaderboards and groups I join.
+                  </span>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-4 cursor-pointer group">
+                <div className="relative flex items-center">
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value="GROUPS_ONLY"
+                    checked={user.leaderboardVisibility === "GROUPS_ONLY"}
+                    onChange={() =>
+                      handleUpdateProfile({
+                        leaderboardVisibility: "GROUPS_ONLY",
+                      })
+                    }
+                    className="peer sr-only"
+                  />
+                  <div className="w-5 h-5 rounded-full border-2 border-slate-300 peer-checked:border-indigo-600 peer-checked:bg-indigo-600 transition-all relative">
+                    <div className="absolute inset-0 bg-white rounded-full transform scale-0 peer-checked:scale-50 transition-transform" />
+                  </div>
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-900 block group-hover:text-indigo-700 transition">
+                    Show my stats only in groups
+                  </span>
+                  <span className="text-slate-500 text-sm">
+                    Your stats won't appear on public global leaderboards.
+                  </span>
+                </div>
+              </label>
+            </div>
           </div>
         </div>
 

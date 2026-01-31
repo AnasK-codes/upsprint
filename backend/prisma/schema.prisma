@@ -1,83 +1,84 @@
-datasource db {
-  provider = "postgresql"
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String?
-  name      String?
-  batch     String?
-  branch    String?
-  avatarUrl String?
-  googleId  String?  @unique
-  createdAt DateTime @default(now())
+datasource db {
+  provider = "postgresql"
+}
 
-  accounts    LinkedAccount[]
-  leaderboard Leaderboard?
+model User {
+  id          Int             @id @default(autoincrement())
+  email       String          @unique
+  password    String?
+  name        String?
+  batch       String?
+  branch      String?
+  createdAt   DateTime        @default(now())
+  avatarUrl   String?
+  googleId    String?         @unique
   groups      GroupMember[]
-  
+  leaderboard Leaderboard?
+  accounts    LinkedAccount[]
+  leaderboardVisibility LeaderboardVisibility @default(GLOBAL_AND_GROUPS)
+
   @@index([batch])
   @@index([branch])
 }
 
+enum LeaderboardVisibility {
+  GLOBAL_AND_GROUPS
+  GROUPS_ONLY
+}
+
 model Group {
-  id          Int      @id @default(autoincrement())
+  id          Int           @id @default(autoincrement())
   name        String
   description String?
-  code        String   @unique // For joining via code
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
+  code        String        @unique
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
   members     GroupMember[]
 }
 
 model GroupMember {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  groupId   Int
-  role      String   @default("MEMBER") // ADMIN, MEMBER
-  joinedAt  DateTime @default(now())
-
-  user      User     @relation(fields: [userId], references: [id])
-  group     Group    @relation(fields: [groupId], references: [id])
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  groupId  Int
+  role     String   @default("MEMBER")
+  joinedAt DateTime @default(now())
+  group    Group    @relation(fields: [groupId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, groupId])
   @@index([groupId])
 }
 
 model LinkedAccount {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  platform  String
-  username  String
-  currentStreak   Int @default(0)
-  totalActiveDays Int @default(0)
+  id               Int                @id @default(autoincrement())
+  userId           Int
+  platform         String
+  username         String
+  createdAt        DateTime           @default(now())
+  currentStreak    Int                @default(0)
   lastActivityDate DateTime?
-  createdAt DateTime @default(now())
-
-  user      User               @relation(fields: [userId], references: [id])
-  snapshots PlatformSnapshot[]
-  dailyActivity DailyActivity[]
+  totalActiveDays  Int                @default(0)
+  dailyActivity    DailyActivity[]
+  user             User               @relation(fields: [userId], references: [id])
+  snapshots        PlatformSnapshot[]
 
   @@index([platform])
   @@index([currentStreak])
 }
 
 model PlatformSnapshot {
-  id              Int      @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   linkedAccountId Int
   rating          Int?
-  rankTitle       String?
   problemsSolved  Int?
   rawData         Json
-  createdAt       DateTime @default(now())
-
-  linkedAccount LinkedAccount @relation(fields: [linkedAccountId], references: [id])
+  createdAt       DateTime      @default(now())
+  rankTitle       String?
+  linkedAccount   LinkedAccount @relation(fields: [linkedAccountId], references: [id])
 
   @@index([linkedAccountId, createdAt])
   @@index([createdAt])
@@ -86,7 +87,7 @@ model PlatformSnapshot {
 model JobRun {
   id        Int      @id @default(autoincrement())
   jobName   String
-  status    String // "success" | "failed"
+  status    String
   message   String?
   createdAt DateTime @default(now())
 }
@@ -97,19 +98,17 @@ model Leaderboard {
   score     Float
   rank      Int
   updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model DailyActivity {
-  id              Int      @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   linkedAccountId Int
-  date            DateTime // Normalized to YYYY-MM-DD
-  count           Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  linkedAccount LinkedAccount @relation(fields: [linkedAccountId], references: [id])
+  date            DateTime
+  count           Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  linkedAccount   LinkedAccount @relation(fields: [linkedAccountId], references: [id])
 
   @@unique([linkedAccountId, date])
 }

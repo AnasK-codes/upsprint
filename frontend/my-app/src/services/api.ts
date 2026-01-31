@@ -31,6 +31,7 @@ export interface UserProfile {
   avatarUrl: string | null;
   createdAt: string;
   accounts: LinkedAccount[];
+  leaderboardVisibility: "GLOBAL_AND_GROUPS" | "GROUPS_ONLY";
 }
 
 export interface AuthResponse {
@@ -183,6 +184,12 @@ export const api = {
     request<UserProfile>("/users/me", {
       method: "PUT",
       body: JSON.stringify(data),
+    }),
+
+  updateLeaderboardVisibility: (visibility: "GLOBAL_AND_GROUPS" | "GROUPS_ONLY") =>
+    request<UserProfile>("/users/leaderboard-visibility", {
+      method: "PATCH",
+      body: JSON.stringify({ visibility }),
     }),
 
   connectAccount: (platform: string, username: string) =>

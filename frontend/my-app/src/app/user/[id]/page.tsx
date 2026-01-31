@@ -11,15 +11,27 @@ export default function UserRankPage() {
 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     api
       .getUserRank(userId)
       .then(setData)
+      .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [userId]);
 
   if (loading) return <Loading />;
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="text-6xl mb-4">🙈</div>
+        <h2 className="text-2xl font-bold text-gray-900">User Hidden</h2>
+        <p className="text-gray-500 mt-2">{error}</p>
+      </div>
+    );
+  }
 
   if (!data) {
     return (

@@ -16,6 +16,7 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
         branch: true,
         avatarUrl: true,
         createdAt: true,
+        leaderboardVisibility: true as any,
         accounts: {
           select: {
             id: true,
@@ -23,7 +24,7 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
             username: true,
           },
         },
-      },
+      } as any,
     });
 
     if (!user) {
@@ -57,6 +58,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
         branch: true,
         avatarUrl: true,
         createdAt: true,
+        leaderboardVisibility: true as any,
         accounts: {
           select: {
             id: true,
@@ -64,7 +66,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
             username: true,
           },
         },
-      },
+      } as any,
     });
 
     res.json(user);
@@ -247,6 +249,59 @@ export const getUserActivity = async (req: AuthRequest, res: Response) => {
     res.json(allActivity);
   } catch (error) {
     console.error("Get user activity error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const updateLeaderboardVisibility = async (req: AuthRequest, res: Response) => {
+  try {
+    const { visibility } = req.body;
+
+    if (!["GLOBAL_AND_GROUPS", "GROUPS_ONLY"].includes(visibility)) {
+      return res.status(400).json({ message: "Invalid visibility option" });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: req.userId },
+      data: {
+        leaderboardVisibility: visibility,
+      } as any,
+      select: {
+        id: true,
+        leaderboardVisibility: true as any,
+      } as any,
+    });
+
+    // Clear leaderboard cache so changes are reflected immediately
+    await import("../utils/cache.js").then(m => m.clearCachePrefix("leaderboard:"));
+
+    // Fetch full profile to return (ensures consistent state)
+    const fullProfile = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        batch: true,
+        branch: true,
+        avatarUrl: true,
+        createdAt: true,
+        leaderboardVisibility: true as any,
+        accounts: {
+          select: {
+            id: true,
+            platform: true,
+            username: true,
+          },
+        },
+      } as any,
+    });
+
+    console.log(`[Visibility Update] User ${req.userId}: ${visibility}`);
+
+    res.json(fullProfile);
+  } catch (error) {
+    console.error("Update visibility error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
