@@ -26,6 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
+        suppressHydrationWarning
         className={`${outfit.variable} font-sans bg-[var(--background)] text-[var(--foreground)] min-h-screen flex flex-col`}
       >
         <ToastProvider>

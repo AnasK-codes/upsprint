@@ -84,7 +84,7 @@ export async function getGroupMembers(groupId: number) {
         select: {
           id: true,
           name: true,
-          email: true,
+          // email: true, // Removed for privacy
           avatarUrl: true,
         },
       },
@@ -199,7 +199,7 @@ export async function getGroupLeaderboard(
     user: {
       id: item.user.id,
       name: item.user.name || "Anonymous",
-      email: item.user.email,
+      // email: item.user.email, // Removed for privacy
       avatarUrl: item.user.avatarUrl,
     },
     // Populate extra fields if useful for UI context

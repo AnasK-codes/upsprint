@@ -1,14 +1,14 @@
 "use client";
 
-import React from "react";
 import { clsx } from "clsx";
+import { memo } from "react";
 
 interface AuroraBackgroundProps {
   className?: string;
   children: React.ReactNode;
 }
 
-export function AuroraBackground({
+export const AuroraBackground = memo(function AuroraBackground({
   className,
   children,
 }: AuroraBackgroundProps) {
@@ -29,4 +29,4 @@ export function AuroraBackground({
       </div>
     </div>
   );
-}
+});

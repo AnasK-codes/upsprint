@@ -1,14 +1,9 @@
 "use client";
 
 import { motion, HTMLMotionProps } from "framer-motion";
-import { ReactNode } from "react";
+import { ReactNode, memo } from "react";
 import { Loader2 } from "lucide-react";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { cn } from "@/utils/cn";
 
 interface AnimatedButtonProps extends HTMLMotionProps<"button"> {
   children: ReactNode;
@@ -16,7 +11,7 @@ interface AnimatedButtonProps extends HTMLMotionProps<"button"> {
   isLoading?: boolean;
 }
 
-export default function AnimatedButton({
+const AnimatedButton = memo(function AnimatedButton({
   children,
   className,
   variant = "primary",
@@ -50,4 +45,6 @@ export default function AnimatedButton({
       {children}
     </motion.button>
   );
-}
+});
+
+export default AnimatedButton;

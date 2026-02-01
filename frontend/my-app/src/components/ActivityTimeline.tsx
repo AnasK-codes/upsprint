@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { TrendingUp, Award, Zap, GitCommit, CheckCircle } from "lucide-react";
+import { TrendingUp, Zap, GitCommit, CheckCircle } from "lucide-react";
 
 export interface Activity {
   id: string;
@@ -25,8 +25,7 @@ export default function ActivityTimeline({
     switch (type) {
       case "rank_up":
         return <TrendingUp className="w-5 h-5 text-emerald-500" />;
-      case "badge_unlock":
-        return <Award className="w-5 h-5 text-amber-500" />;
+
       case "streak_milestone":
         return <Zap className="w-5 h-5 text-cyan-500" />;
       case "solve":
@@ -40,8 +39,7 @@ export default function ActivityTimeline({
     switch (type) {
       case "rank_up":
         return "bg-emerald-50 border-emerald-100";
-      case "badge_unlock":
-        return "bg-amber-50 border-amber-100";
+
       case "streak_milestone":
         return "bg-cyan-50 border-cyan-100";
       case "solve":
@@ -69,11 +67,9 @@ export default function ActivityTimeline({
             className={`absolute left-[14px] top-4 w-5 h-5 rounded-full border-[3px] border-white shadow-sm z-10 box-content ${
               activity.type === "rank_up"
                 ? "bg-emerald-500"
-                : activity.type === "badge_unlock"
-                  ? "bg-amber-500"
-                  : activity.type === "streak_milestone"
-                    ? "bg-cyan-500"
-                    : "bg-indigo-500"
+                : activity.type === "streak_milestone"
+                  ? "bg-cyan-500"
+                  : "bg-indigo-500"
             }`}
           />
 

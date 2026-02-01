@@ -76,7 +76,7 @@ export default function LoginPage() {
             <Label htmlFor="email">Email Address</Label>
             <Input
               id="email"
-              placeholder="pcSorkar@magic.com"
+              placeholder="user@example.com"
               type="email"
               name="email"
               value={formData.email}
@@ -124,7 +124,9 @@ export default function LoginPage() {
             whileTap={{ scale: 0.98 }}
             type="button"
             onClick={() => {
-              window.location.href = "http://localhost:4000/auth/google";
+              const apiUrl =
+                process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+              window.location.href = `${apiUrl}/auth/google`;
             }}
             className="group/btn shadow-input relative flex h-10 w-full items-center justify-start space-x-2 rounded-md bg-gray-50 px-4 font-medium text-black"
           >

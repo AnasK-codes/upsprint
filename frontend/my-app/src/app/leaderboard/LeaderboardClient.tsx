@@ -5,12 +5,39 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api, LeaderboardEntry, Group } from "@/services/api";
 import LeaderboardTable from "@/components/LeaderboardTable";
 import Skeleton from "@/components/Skeleton";
-import WelcomeAnimation from "@/components/WelcomeAnimation";
-import GroupManagementModal from "@/components/GroupManagementModal";
-import GroupDetails from "@/components/GroupDetails";
+import dynamic from "next/dynamic";
+
+const WelcomeAnimation = dynamic(
+  () => import("@/components/WelcomeAnimation"),
+  {
+    ssr: false,
+  },
+);
+const GroupManagementModal = dynamic(
+  () => import("@/components/GroupManagementModal"),
+);
+const GroupDetails = dynamic(() => import("@/components/GroupDetails"));
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Plus, Users } from "lucide-react";
 import { AuroraBackground } from "@/components/AuroraBackground";
+import { memo, useCallback } from "react";
+
+const BATCH_OPTIONS = [
+  "All",
+  "2021",
+  "2022",
+  "2023",
+  "2024",
+  "2025",
+  "2026",
+  "2027",
+  "2028",
+  "2029",
+  "2030",
+];
+
+const BRANCH_OPTIONS = ["All", "CSE", "IT", "ECE", "ME", "EE", "CE", "CHE"];
+const PLATFORM_OPTIONS = ["All", "LeetCode", "Codeforces", "CodeChef"];
 
 export default function LeaderboardPage() {
   const router = useRouter();
@@ -45,20 +72,23 @@ export default function LeaderboardPage() {
   const [showGroupModal, setShowGroupModal] = useState(false);
   const pageSize = 20;
 
-  const updateFilters = (key: keyof typeof filters, value: string) => {
-    const newFilters = { ...filters, [key]: value };
-    setFilters(newFilters);
-    setPage(1);
+  const updateFilters = useCallback(
+    (key: keyof typeof filters, value: string) => {
+      const newFilters = { ...filters, [key]: value };
+      setFilters(newFilters);
+      setPage(1);
 
-    // Update URL
-    const params = new URLSearchParams(searchParams);
-    if (value === "All") {
-      params.delete(key);
-    } else {
-      params.set(key, value);
-    }
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  };
+      // Update URL
+      const params = new URLSearchParams(searchParams);
+      if (value === "All") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [filters, pathname, router, searchParams],
+  );
 
   useEffect(() => {
     // Check for welcome animation
@@ -72,9 +102,6 @@ export default function LeaderboardPage() {
 
     setLoading(true);
     setError(null);
-
-    // Create a cache key for logging or debugging if needed, but not unused
-    // const cacheKey = ...
 
     let fetcher;
     if (activeTab === "leetcode") {
@@ -236,32 +263,20 @@ export default function LeaderboardPage() {
               <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
                 <FilterDropdown
                   label="Batch"
-                  options={[
-                    "All",
-                    "2021",
-                    "2022",
-                    "2023",
-                    "2024",
-                    "2025",
-                    "2026",
-                    "2027",
-                    "2028",
-                    "2029",
-                    "2030",
-                  ]}
+                  options={BATCH_OPTIONS}
                   value={filters.batch}
                   onChange={(val) => updateFilters("batch", val)}
                 />
                 <FilterDropdown
                   label="Branch"
-                  options={["All", "CSE", "IT", "ECE", "ME", "EE", "CE", "CHE"]}
+                  options={BRANCH_OPTIONS}
                   value={filters.branch}
                   onChange={(val) => updateFilters("branch", val)}
                 />
                 {activeTab !== "leetcode" && (
                   <FilterDropdown
                     label="Platform"
-                    options={["All", "LeetCode", "Codeforces", "CodeChef"]}
+                    options={PLATFORM_OPTIONS}
                     value={filters.platform}
                     onChange={(val) => updateFilters("platform", val)}
                   />
@@ -461,7 +476,7 @@ export default function LeaderboardPage() {
   );
 }
 
-function FilterDropdown({
+const FilterDropdown = memo(function FilterDropdown({
   label,
   options,
   value,
@@ -533,9 +548,9 @@ function FilterDropdown({
       </AnimatePresence>
     </div>
   );
-}
+});
 
-function GroupSelector({
+const GroupSelector = memo(function GroupSelector({
   groups,
   selectedId,
   onSelect,
@@ -620,4 +635,4 @@ function GroupSelector({
       </AnimatePresence>
     </div>
   );
-}
+});

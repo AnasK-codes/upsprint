@@ -11,7 +11,7 @@ function OAuthSuccessContent() {
   useEffect(() => {
     const token = searchParams.get("token");
     if (token) {
-      localStorage.setItem("token", token);
+      // Backend already set httpOnly cookie, no need to store token
       // Small delay to show the animation
       setTimeout(() => {
         router.push("/leaderboard");

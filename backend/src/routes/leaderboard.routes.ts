@@ -8,11 +8,10 @@ import {
 } from "../services/leaderboard.service.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { getCache, setCache, clearCachePrefix } from "../utils/cache.js";
+import { VALID_BRANCHES, VALID_PLATFORMS } from "../utils/constants.js";
+import { strictLimiter } from "../middleware/rateLimit.middleware.js";
 
 const router = Router();
-
-const VALID_BRANCHES = ["CSE", "IT", "ECE", "ME", "EE", "CE", "CHE"];
-const VALID_PLATFORMS = ["leetcode", "codeforces", "codechef"];
 
 const validateFilters = (req: any, res: any, next: any) => {
   const { batch, branch, platform } = req.query;
@@ -226,12 +225,13 @@ router.get("/", validateFilters, async (req, res) => {
       skip,
       take: limit,
       include: {
-        user: { select: { id: true, name: true, email: true, avatarUrl: true } },
+        user: { select: { id: true, name: true, avatarUrl: true } },
       },
     });
 
-    const data = rows.map(row => ({
+    const data = rows.map((row, index) => ({
       ...row,
+      rank: skip + index + 1,
       scoreType: "normalized"
     }));
 
@@ -267,8 +267,13 @@ router.get("/top/:n", async (req, res) => {
       include: { user: { select: { id: true, name: true } } },
     });
 
-    setCache(cacheKey, data, 30); // 30s TTL
-    res.json(data);
+    const mapped = data.map((row, index) => ({
+      ...row,
+      rank: index + 1,
+    }));
+
+    setCache(cacheKey, mapped, 30); // 30s TTL
+    res.json(mapped);
   } catch (err) {
     console.error("GET /leaderboard/top error:", err);
     res.status(500).json({ message: "Internal server error" });
@@ -281,34 +286,80 @@ router.get("/top/:n", async (req, res) => {
 router.get("/user/:userId", async (req, res) => {
   try {
     const userId = Number(req.params.userId);
-    const row = await prisma.leaderboard.findUnique({
-      where: { userId },
+    const row = await prisma.leaderboard.findFirst({
+      where: {
+        userId,
+        user: {
+          leaderboardVisibility: "GLOBAL_AND_GROUPS" as any,
+        },
+      },
       include: {
         user: {
-          include: { accounts: true },
+          select: {
+            id: true,
+            name: true,
+            batch: true,
+            branch: true,
+            avatarUrl: true,
+            // leaderboardVisibility: removed to prevent metadata leak
+            accounts: {
+              select: {
+                id: true,
+                platform: true,
+                username: true,
+                currentStreak: true
+              }
+            }
+          }
         },
       },
     });
 
-    // STRICT: If user exists but is hidden, treat as not found/not ranked globally
-    if (row && (row.user as any).leaderboardVisibility === "GROUPS_ONLY") {
-      return res.status(404).json({ message: "This user prefers to hide their accounts" });
+
+    if (!row) {
+      // Check if user exists and is visible
+      const userCheck = await prisma.user.findFirst({
+        where: {
+          id: userId,
+          leaderboardVisibility: "GLOBAL_AND_GROUPS" as any
+        }
+      });
+
+      if (!userCheck) {
+        return res.status(404).json({ message: "User not found or hidden" });
+      }
     }
 
+
+
     const accountWithMaxStreak = await prisma.linkedAccount.findFirst({
-      where: { userId },
+      where: {
+        userId,
+        user: {
+          leaderboardVisibility: "GLOBAL_AND_GROUPS" as any
+        }
+      },
       orderBy: { currentStreak: "desc" },
     });
     const currentStreak = accountWithMaxStreak?.currentStreak || 0;
 
     if (!row) {
       // If user is not yet on the global leaderboard, return partial data if they have connected accounts
+      // AND are visible (checked via the findFirst above)
       if (currentStreak > 0) {
+        // We need to fetch basic user details since 'row' is null
+        const userDetails = await prisma.user.findFirst({
+          where: { id: userId, leaderboardVisibility: "GLOBAL_AND_GROUPS" as any },
+          select: { id: true, name: true, avatarUrl: true }
+        });
+
+        if (!userDetails) return res.status(404).json({ message: "User not found" });
+
         return res.json({
-          rank: 0, // Not ranked globally yet
+          rank: 0,
           score: 0,
           currentStreak,
-          user: { id: userId, name: "User" } // Minimal user
+          user: userDetails
         });
       }
       return res.status(404).json({ message: "User not ranked yet" });
@@ -336,7 +387,8 @@ router.get("/user/:userId", async (req, res) => {
  * POST /leaderboard/rebuild (manual trigger)
  * Protect with auth (authenticate middleware)
  */
-router.post("/rebuild", authenticate, async (_req, res) => {
+router.post("/rebuild", authenticate, strictLimiter, async (_req, res) => {
+
   try {
     // Clear all leaderboard caches
     clearCachePrefix("leaderboard:");

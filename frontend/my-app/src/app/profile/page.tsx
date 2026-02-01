@@ -6,10 +6,15 @@ import { api, UserProfile } from "../../services/api";
 import Skeleton from "../../components/Skeleton";
 import ProfileCard from "../../components/ProfileCard";
 import PlatformCard from "../../components/PlatformCard";
-import BadgeCard, { Badge } from "../../components/BadgeCard";
-import ActivityTimeline, { Activity } from "../../components/ActivityTimeline";
+import { Activity } from "../../components/ActivityTimeline";
+import dynamic from "next/dynamic";
+
+const ActivityTimeline = dynamic(
+  () => import("../../components/ActivityTimeline"),
+);
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Award, Lock } from "lucide-react";
+import { Zap, Lock } from "lucide-react";
+import { useCallback } from "react";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -51,7 +56,6 @@ export default function ProfilePage() {
           }
         } catch (e) {
           // User might not be on leaderboard yet, ignore error
-          // console.error("Failed to fetch rank:", e);
         }
       }
 
@@ -66,7 +70,6 @@ export default function ProfilePage() {
         err.message?.includes("401") ||
         err.message?.includes("Unauthorized")
       ) {
-        localStorage.removeItem("token");
         router.push("/");
       } else {
         setError("Failed to load profile");
@@ -76,22 +79,25 @@ export default function ProfilePage() {
     }
   };
 
-  const handleUpdateProfile = async (data: Partial<UserProfile>) => {
-    try {
-      let updatedUser;
-      if (data.leaderboardVisibility) {
-        updatedUser = await api.updateLeaderboardVisibility(
-          data.leaderboardVisibility,
-        );
-      } else {
-        updatedUser = await api.updateProfile(data);
+  const handleUpdateProfile = useCallback(
+    async (data: Partial<UserProfile>) => {
+      try {
+        let updatedUser;
+        if (data.leaderboardVisibility) {
+          updatedUser = await api.updateLeaderboardVisibility(
+            data.leaderboardVisibility,
+          );
+        } else {
+          updatedUser = await api.updateProfile(data);
+        }
+        setUser(updatedUser);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to update profile");
       }
-      setUser(updatedUser);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to update profile");
-    }
-  };
+    },
+    [],
+  );
 
   const handleConnectStart = (platform: string) => {
     setSelectedPlatform(platform);
@@ -270,37 +276,6 @@ export default function ProfilePage() {
                 No recent activity found. Solve some problems!
               </div>
             )}
-          </div>
-
-          {/* Badges / Sidebar */}
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
-                <Award className="w-4 h-4 text-indigo-600" />
-              </div>
-              Badges
-            </h3>
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2rem] p-8 text-white relative overflow-hidden shadow-2xl">
-              {/* Background Glows */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 rounded-full blur-3xl opacity-20 -mr-10 -mt-10" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500 rounded-full blur-3xl opacity-20 -ml-10 -mb-10" />
-
-              <div className="relative z-10 flex flex-col items-center text-center space-y-4 py-8">
-                <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 mb-2">
-                  <Lock className="w-8 h-8 text-indigo-300" />
-                </div>
-                <h4 className="text-2xl font-bold">Achievements Vault</h4>
-                <p className="text-slate-400 text-sm leading-relaxed max-w-[200px]">
-                  Complete weekly challenges and daily streaks to unlock
-                  exclusive badges.
-                  <br />
-                  <br />
-                  <span className="text-indigo-300 font-semibold uppercase text-xs tracking-widest border border-indigo-500/30 px-3 py-1 rounded-full bg-indigo-500/10">
-                    Coming Soon
-                  </span>
-                </p>
-              </div>
-            </div>
           </div>
         </div>
 

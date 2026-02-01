@@ -2,13 +2,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import prisma from "../config/db.js";
 import jwt from "jsonwebtoken";
-
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-};
+import { VALID_BRANCHES, COOKIE_OPTIONS } from "../utils/constants.js";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -17,6 +11,15 @@ export const register = async (req: Request, res: Response) => {
     if (!email || !password) {
       return res.status(400).json({ message: "Email and Password required" });
     }
+
+    if (batch && !/^\d{4}$/.test(String(batch))) {
+      return res.status(400).json({ message: "Invalid batch year" });
+    }
+
+    if (branch && !VALID_BRANCHES.includes(branch)) {
+      return res.status(400).json({ message: "Invalid branch" });
+    }
+
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -96,10 +99,6 @@ export const login = async (req: any, res: any) => {
 };
 
 export const logout = (req: Request, res: Response) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-  });
+  res.clearCookie("token", COOKIE_OPTIONS);
   res.json({ message: "Logged out successfully" });
 };

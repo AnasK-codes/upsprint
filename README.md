@@ -1,84 +1,107 @@
-# 🚀 UpSprint
+# UpSprint
 
-> **Competitive Programming, Gamified & Social.**
+A competitive programming platform that aggregates multi-platform stats (LeetCode, Codeforces, CodeChef) into unified leaderboards, emphasizing consistency over sporadic performance through daily activity tracking and social accountability.
 
-## 🎯 Core Idea & Motivation
+## Key Features
 
-Competitive programming is often a solitary, fragmented grind. Students juggle multiple profiles (LeetCode, Codeforces, CodeChef), losing sight of holistic progress. Motivation dips after contests, and "I'll start tomorrow" becomes the norm.
+- **Unified Profile**: Single identity across LeetCode, Codeforces, and CodeChef with automatic sync
+- **Multi-Dimensional Leaderboards**: Global normalized scores, daily activity, platform-specific, and group-based rankings
+- **Privacy Controls**: GROUPS_ONLY visibility option for users who want to compete privately
+- **Streak Tracking**: Visual daily commitment metrics with real-time updates
+- **Group Competition**: Create private leaderboards for study groups with custom invite codes
+- **Activity Timeline**: Real-time feed of problem-solving milestones and account connections
 
-**UpSprint turns this isolation into a shared, performance-driven culture.** It connects friends, unifies stats, and rewards the most undervalued metric in coding: **Consistency**.
+## Tech Stack
 
-## 🧠 What We Solve
+**Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, Framer Motion  
+**Backend**: Node.js, Express, TypeScript  
+**Database**: PostgreSQL with Prisma ORM  
+**Auth**: Google OAuth 2.0 (Passport.js), httpOnly cookies  
+**Caching**: In-memory LRU cache for leaderboard queries  
+**Jobs**: Cron-based snapshot workers for platform data sync
 
-- **❌ The fragmented view**: No more manual profile hopping to see LeetCode streaks vs. Codeforces ratings.
-- **❌ The motivation gap**: We replace "grinding in silence" with "competing in trusted circles".
-- **✅ Consistency > Talent**: Our algorithms rank disciplined daily effort higher than sporadic brilliance.
+## Architecture
 
-## ✨ Key Features
+```
+┌─────────────┐
+│  Next.js UI │
+└──────┬──────┘
+       │ API calls (credentials: include)
+       ▼
+┌─────────────────────────────────┐
+│  Express API + Auth Middleware  │
+└──────┬──────────────────┬───────┘
+       │                  │
+       ▼                  ▼
+┌──────────┐      ┌──────────────┐
+│  Cache   │      │  PostgreSQL  │
+│  (LRU)   │      │   (Prisma)   │
+└──────────┘      └──────┬───────┘
+                         ▲
+                         │
+                  ┌──────┴───────┐
+                  │  Cron Jobs   │
+                  │  - Snapshots │
+                  │  - Rankings  │
+                  └──────────────┘
+```
 
-### 👥 Social-First Connected Profiles
+**Data Flow**:
 
-- **Unified Identity**: Link LeetCode, Codeforces, and CodeChef to a single public profile.
-- **Friend Tracking**: See what your peers are solving in real-time.
-- **Automatic Sync**: No manual entry. Our snapshot engine keeps your stats fresh.
+1. Cron jobs fetch platform data (LeetCode/Codeforces/CodeChef APIs)
+2. Snapshots stored in `PlatformSnapshot` and `DailyActivity` tables
+3. Leaderboard rebuild job calculates normalized scores
+4. API serves cached leaderboard data with DB-level visibility filtering
 
-### 🏆 Multi-Dimensional Leaderboards
+## Security & Privacy
 
-We don't just rank by rating. We rank by habits.
+- **Auth**: httpOnly cookies, CSRF protection, rate limiting
+- **Visibility Enforcement**: DB-level filtering for `GROUPS_ONLY` users (never appear in global APIs)
+- **User Isolation**: Membership verification before group data access
+- **Minimal Responses**: Only required fields returned, no internal IDs leaked
+- **Input Validation**: Batch/branch/platform filters validated against constants
 
-- **Global Normalized Leaderboard**: A fair scoring system that harmonizes ratings across different platforms.
-- **Daily Activity Leaderboard**: A reset-daily view of who is putting in the work _today_.
-- **Platform-Specific Views**: Focused leaderboards for LeetCode or Codeforces purists.
+## Local Setup
 
-### 🔥 Gamification
+### Prerequisites
 
-- **Streaks**: Visualizing daily commitment.
-- **Activity Timeline**: A feed of your recent problem-solving milestones.
-- **Badges (Coming Soon)**: Achievements for consistency, language mastery, and contest participation.
-
-## ⚙️ Engineering Highlights
-
-UpSprint is built for scale, reliability, and data integrity.
-
-- **Snapshot-Based Architecture**: Historical performance is archived via periodic snapshots, preventing data loss and allowing auditability.
-- **Deterministic Ranking Engine**: Leaderboards are rebuilt in optimized batches using atomic transactions.
-- **In-Memory Caching**: High-frequency read paths are cached to ensure a "real-time" feel without overloading the database.
-
-## 🧩 Tech Stack
-
-### Frontend
-
-- **Framework**: [Next.js](https://nextjs.org/) (App Router & Server Components)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/) + [Framer Motion](https://www.framer.com/motion/)
-- **State**: React Hooks & Context
-- **Language**: TypeScript
+- Node.js 18+
+- PostgreSQL 14+
 
 ### Backend
 
-- **Runtime**: [Node.js](https://nodejs.org/) & [Express.js](https://expressjs.com/)
-- **Database**: [PostgreSQL](https://www.postgresql.org/)
-- **ORM**: [Prisma](https://www.prisma.io/)
-- **Auth**: Google OAuth 2.0 (Passport.js)
-- **Security**: Rate Limiting (`apiLimiter`), Secure Headers, HTTP-only Cookies
+```bash
+cd backend
+npm install
+cp .env.example .env  # Configure DATABASE_URL, GOOGLE_CLIENT_ID, etc.
+npx prisma migrate dev
+npm run dev  # Runs on port 4000
+```
 
-## 🏗️ System Design
+### Frontend
 
-A service-oriented architecture designed for clarity and correctness:
+```bash
+cd frontend/my-app
+npm install
+cp .env.example .env.local  # Set NEXT_PUBLIC_API_URL=http://localhost:4000
+npm run dev  # Runs on port 3000
+```
 
-    User[User] -->|Action| UI[Next.js Frontend]
-    UI -->|API Req| API[Express API / Auth Layer]
-    API -->|Read| Cache[(Redis/Memory Cache)]
-    API -->|Write| DB[(PostgreSQL)]
-    Cron[Scheduler] -->|Trigger| Jobs[Snapshot Workers]
-    Jobs -->|Fetch| Ext[External APIs (LeetCode/CF)]
-    Jobs -->|Persist| DB
-    Jobs -->|Rebuild| RankingService
+### Cron Jobs (Optional)
 
-## 🧠 Philosophy
+```bash
+cd backend
+npm run snapshot  # Manual trigger for testing
+```
 
-**UpSprint is not about flexing ranks.**
-It's about **showing up**. It's about learning alongside friends and building the muscle of consistency. Progress feels real when shared.
+## Future Improvements
+
+- **Real-time Updates**: WebSocket integration for live leaderboard changes
+- **Badges System**: Achievements for consistency, language mastery, contest participation
+- **Analytics Dashboard**: Personal performance trends and insights
+- **Mobile App**: React Native client for iOS/Android
+- **Contest Integration**: Live contest tracking and notifications
 
 ---
 
-© 2026 UpSprint Team. Built to make competitive programming social again ❤️
+Built with ❤️ for competitive programmers who value consistency.

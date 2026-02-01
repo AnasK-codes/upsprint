@@ -33,6 +33,17 @@ export const Cover = ({
     }
   }, [ref.current]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (ref.current) {
+        setContainerWidth(ref.current?.clientWidth ?? 0);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <div
       onMouseEnter={() => setHovered(true)}

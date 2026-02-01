@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
@@ -16,23 +16,28 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+  const handleScroll = useCallback(() => {
+    setIsScrolled(window.scrollY > 20);
   }, []);
 
-  const navLinks = [
-    { name: "Home", href: "/", icon: Home },
-    { name: "Leaderboard", href: "/leaderboard", icon: Trophy },
-  ];
+  useEffect(() => {
+    setMounted(true);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
-  if (isAuthenticated) {
-    navLinks.push({ name: "Profile", href: "/profile", icon: User });
-  }
+  const navLinks = useMemo(() => {
+    const links = [
+      { name: "Home", href: "/", icon: Home },
+      { name: "Leaderboard", href: "/leaderboard", icon: Trophy },
+    ];
+
+    if (isAuthenticated) {
+      links.push({ name: "Profile", href: "/profile", icon: User });
+    }
+
+    return links;
+  }, [isAuthenticated]);
 
   return (
     <div className="fixed top-4 sm:top-6 left-0 right-0 z-50 flex justify-center px-2 sm:px-4 pointer-events-none">

@@ -37,7 +37,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userData = await api.getProfile();
       setUser(userData);
     } catch (err) {
-      // console.error("Failed to fetch user:", err);
       // Expected if not logged in
       setUser(null);
     } finally {
@@ -52,10 +51,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
+    // Middleware handles server-side protection.
+    // Client-side checks are for UX/fallback.
+
     // Routes that authenticated users should NOT see
     const authRoutes = ["/login", "/signup"];
     // Routes that REQUIRE authentication
-    const protectedRoutes = ["/dashboard", "/profile", "/leaderboard"];
+    const protectedRoutes = ["/profile", "/leaderboard"];
 
     const isAuthRoute = authRoutes.includes(pathname);
     const isProtectedRoute = protectedRoutes.some((route) =>

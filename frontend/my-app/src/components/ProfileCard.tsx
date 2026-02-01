@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { UserProfile } from "@/services/api";
 import { Edit2, Save, X, Trophy, Target, Zap } from "lucide-react";
@@ -16,7 +16,9 @@ interface ProfileCardProps {
   onUpdate: (data: Partial<UserProfile>) => Promise<void>;
 }
 
-export default function ProfileCard({
+import { memo } from "react";
+
+const ProfileCard = memo(function ProfileCard({
   user,
   stats,
   onUpdate,
@@ -30,16 +32,16 @@ export default function ProfileCard({
     avatarUrl: user.avatarUrl || "",
   });
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setSaving(true);
     await onUpdate(formData);
     setSaving(false);
     setIsEditing(false);
-  };
+  }, [formData, onUpdate]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }, []);
 
   return (
     <motion.div
@@ -241,4 +243,6 @@ export default function ProfileCard({
       </div>
     </motion.div>
   );
-}
+});
+
+export default ProfileCard;

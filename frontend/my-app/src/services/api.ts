@@ -1,5 +1,5 @@
 
-const API_BASE = "http://localhost:4000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export interface LeaderboardEntry {
   id: number;
@@ -12,6 +12,9 @@ export interface LeaderboardEntry {
   user: {
     id: number;
     name: string;
+    avatarUrl: string | null;
+    batch: string | null;
+    branch: string | null;
     accounts?: LinkedAccount[];
   };
 }
@@ -62,7 +65,7 @@ export interface GroupMember {
 
 export interface Activity {
   id: string;
-  type: "solve" | "connection" | "badge_unlock" | "rank_up";
+  type: "solve" | "connection" | "rank_up";
   title: string;
   description: string;
   date: string;

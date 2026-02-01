@@ -1,8 +1,7 @@
 import { Response } from "express";
 import prisma from "../config/db.js";
 import { AuthRequest } from "../middleware/auth.middleware.js";
-
-const VALID_PLATFORMS = ["codeforces", "leetcode", "codechef"];
+import { VALID_PLATFORMS, VALID_BRANCHES } from "../utils/constants.js";
 
 export const getProfile = async (req: AuthRequest, res: Response) => {
   try {
@@ -41,6 +40,14 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
 export const updateProfile = async (req: AuthRequest, res: Response) => {
   try {
     const { name, batch, branch, avatarUrl } = req.body;
+
+    if (batch && !/^\d{4}$/.test(String(batch))) {
+      return res.status(400).json({ message: "Invalid batch year" });
+    }
+
+    if (branch && !VALID_BRANCHES.includes(branch)) {
+      return res.status(400).json({ message: "Invalid branch" });
+    }
 
     const user = await prisma.user.update({
       where: { id: req.userId },
@@ -297,7 +304,7 @@ export const updateLeaderboardVisibility = async (req: AuthRequest, res: Respons
       } as any,
     });
 
-    console.log(`[Visibility Update] User ${req.userId}: ${visibility}`);
+
 
     res.json(fullProfile);
   } catch (error) {

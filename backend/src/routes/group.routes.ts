@@ -1,5 +1,6 @@
 
 import { Router } from "express";
+import prisma from "../config/db.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import {
   getUserGroups,
@@ -38,6 +39,12 @@ router.post("/", authenticate, async (req: any, res) => {
 
     if (!name) {
       return res.status(400).json({ message: "Group name is required" });
+    }
+    if (name.length < 3 || name.length > 50) {
+      return res.status(400).json({ message: "Name must be between 3 and 50 characters" });
+    }
+    if (description && description.length > 200) {
+      return res.status(400).json({ message: "Description too long (max 200 chars)" });
     }
 
     const group = await createGroup(userId, name, description);
@@ -99,6 +106,22 @@ router.post("/:groupId/leave", authenticate, async (req: any, res) => {
 router.get("/:groupId/members", authenticate, async (req: any, res) => {
   try {
     const groupId = Number(req.params.groupId);
+    const userId = req.userId;
+
+    // Check membership
+    const membership = await prisma.groupMember.findUnique({
+      where: {
+        userId_groupId: {
+          userId,
+          groupId,
+        },
+      },
+    });
+
+    if (!membership) {
+      return res.status(403).json({ message: "You are not a member of this group" });
+    }
+
     const members = await getGroupMembers(groupId);
     res.json(members);
   } catch (err) {
@@ -111,7 +134,7 @@ router.get("/:groupId/members", authenticate, async (req: any, res) => {
  * GET /groups/:groupId/leaderboard
  * Fetch leaderboard for a specific group
  */
-router.get("/:groupId/leaderboard", async (req, res) => {
+router.get("/:groupId/leaderboard", authenticate, async (req: any, res) => {
   try {
     const groupId = Number(req.params.groupId);
     const page = Math.max(1, Number(req.query.page) || 1);
@@ -120,6 +143,20 @@ router.get("/:groupId/leaderboard", async (req, res) => {
 
     if (isNaN(groupId)) {
       return res.status(400).json({ message: "Invalid group ID" });
+    }
+
+    // Check membership
+    const membership = await prisma.groupMember.findUnique({
+      where: {
+        userId_groupId: {
+          userId: req.userId!,
+          groupId,
+        },
+      },
+    });
+
+    if (!membership) {
+      return res.status(403).json({ message: "You are not a member of this group" });
     }
 
     const data = await getGroupLeaderboard(groupId, page, limit, metric);

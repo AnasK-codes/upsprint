@@ -36,12 +36,12 @@ export default function SignupPage() {
     setFormError("");
 
     if (formData.password !== formData.confirmPassword) {
-      setFormError("Passwords same daliye ji!");
+      setFormError("Passwords do not match");
       return;
     }
 
     if (formData.password.length < 6) {
-      setFormError("Password 6 se jada characters dal bro!");
+      setFormError("Password must be at least 6 characters");
       return;
     }
 
@@ -56,12 +56,12 @@ export default function SignupPage() {
         branch: formData.branch,
       });
 
-      success("Account bangaya! Login karne ke liye redirecting...");
+      success("Account created! Redirecting to login...");
       setTimeout(() => {
         router.push("/login");
       }, 1500);
     } catch (err: any) {
-      setFormError(err.message || "Kuchh galti hai. Fir se try karein.");
+      setFormError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }

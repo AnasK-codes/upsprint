@@ -20,7 +20,9 @@ interface LeaderboardRowProps {
   rankChange?: "up" | "down" | "same" | "new";
 }
 
-export default function LeaderboardRow({
+import { memo } from "react";
+
+const LeaderboardRow = memo(function LeaderboardRow({
   entry,
   index,
   type = "score",
@@ -78,7 +80,7 @@ export default function LeaderboardRow({
       case 3:
         return "bg-gradient-to-r from-orange-50/60 via-white/50 to-orange-100/60 border-orange-200/80 shadow-[0_0_20px_-5px_rgba(249,115,22,0.15)]";
       default:
-        return "bg-white/40 border-white/50 hover:bg-white/60";
+        return "border-white/50";
     }
   };
 
@@ -217,7 +219,14 @@ export default function LeaderboardRow({
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={{
+        opacity: 0,
+        backgroundColor: isStreakBroken
+          ? "rgba(248, 250, 252, 0.3)"
+          : entry.rank > 3
+            ? "rgba(255, 255, 255, 0.4)"
+            : "rgba(255, 255, 255, 0)",
+      }}
       animate={{
         opacity: isStreakBroken ? 0.7 : 1,
         y:
@@ -239,7 +248,11 @@ export default function LeaderboardRow({
                   "rgba(239, 68, 68, 0.1)",
                   "rgba(255,255,255,0.6)",
                 ]
-              : "rgba(255, 255, 255, 0.6)",
+              : isStreakBroken
+                ? "rgba(248, 250, 252, 0.3)"
+                : entry.rank > 3
+                  ? "rgba(255, 255, 255, 0.4)"
+                  : "rgba(255, 255, 255, 0)",
       }}
       transition={{
         duration: 0.3,
@@ -258,7 +271,7 @@ export default function LeaderboardRow({
         "relative flex items-center p-4 rounded-3xl border transition-all mb-3",
         getRankStyles(entry.rank),
         isStreakBroken
-          ? "grayscale-[0.5] border-dashed border-slate-300/50 bg-slate-50/30"
+          ? "grayscale-[0.5] border-dashed border-slate-300/50"
           : "shadow-sm",
       )}
     >
@@ -311,4 +324,6 @@ export default function LeaderboardRow({
       <div className="flex-shrink-0 text-right">{renderValue()}</div>
     </motion.div>
   );
-}
+});
+
+export default LeaderboardRow;

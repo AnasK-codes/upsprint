@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Group, GroupMember, api } from "@/services/api";
 import { Copy, Check, LogOut, Users, Shield, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
+import Image from "next/image";
+import { useToast } from "@/hooks/useToast";
 
 interface GroupDetailsProps {
   group: Group;
@@ -19,6 +21,7 @@ export default function GroupDetails({
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const { error: toastError, success: toastSuccess } = useToast();
 
   useEffect(() => {
     setLoading(true);
@@ -42,7 +45,7 @@ export default function GroupDetails({
         onLeave();
       } catch (err) {
         console.error("Failed to leave group", err);
-        alert("Failed to leave group. Please try again.");
+        toastError("Failed to leave group. Please try again.");
       }
     }
   };
@@ -145,11 +148,14 @@ export default function GroupDetails({
                 >
                   <div className="relative">
                     {member.user.avatarUrl ? (
-                      <img
-                        src={member.user.avatarUrl}
-                        alt={member.user.name}
-                        className="w-12 h-12 rounded-full bg-gray-100 object-cover ring-2 ring-white shadow-sm"
-                      />
+                      <div className="relative w-12 h-12 rounded-full ring-2 ring-white shadow-sm overflow-hidden bg-gray-100">
+                        <Image
+                          src={member.user.avatarUrl}
+                          alt={member.user.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
                     ) : (
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-100 to-cyan-100 text-indigo-600 flex items-center justify-center font-bold text-lg ring-2 ring-white shadow-sm">
                         {member.user.name[0]?.toUpperCase()}
