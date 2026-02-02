@@ -40,6 +40,9 @@ export default function LoginPage() {
       });
 
       if (response.token) {
+        // Set cookie manually for frontend middleware to see it
+        const isProd = process.env.NODE_ENV === "production";
+        document.cookie = `token=${response.token}; path=/; max-age=604800; SameSite=Lax; ${isProd ? "Secure" : ""}`;
         // useAuth login: sets cookie, updates state, redirects
         await login(response.user);
         success("Login successful!");

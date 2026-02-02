@@ -56,7 +56,6 @@ export default function LeaderboardTable({
         {rows.map((row, index) => {
           const currentRank = index + 1;
           const previousRank = prevRanks.current.get(row.user.id);
-
           let rankChange: "up" | "down" | "same" | "new" = "same";
 
           if (previousRank === undefined) {

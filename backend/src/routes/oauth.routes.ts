@@ -51,8 +51,8 @@ router.get(
     // Set cookie
     res.cookie("token", token, COOKIE_OPTIONS);
 
-    // redirect back to frontend home
-    res.redirect(`${process.env.FRONTEND_URL}/`);
+    // redirect back to frontend home with token
+    res.redirect(`${process.env.FRONTEND_URL}/?token=${token}`);
   }
 );
 

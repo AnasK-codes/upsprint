@@ -219,6 +219,7 @@ const LeaderboardRow = memo(function LeaderboardRow({
 
   return (
     <motion.div
+      layout="position"
       initial={{
         opacity: 0,
         backgroundColor: isStreakBroken
@@ -229,12 +230,7 @@ const LeaderboardRow = memo(function LeaderboardRow({
       }}
       animate={{
         opacity: isStreakBroken ? 0.7 : 1,
-        y:
-          rankChange === "up"
-            ? [0, -4, 0]
-            : rankChange === "down"
-              ? [0, 4, 0]
-              : 0,
+        y: 0, // Let layout handle position, only animate color/opacity here
         backgroundColor:
           rankChange === "up"
             ? [
@@ -255,20 +251,12 @@ const LeaderboardRow = memo(function LeaderboardRow({
                   : "rgba(255, 255, 255, 0)",
       }}
       transition={{
+        layout: { duration: 0.3, ease: "easeOut" },
         duration: 0.3,
         ease: "easeOut",
       }}
-      whileHover={{
-        scale: 1.01,
-        y: -1,
-        backgroundColor: "rgba(255, 255, 255, 0.6)",
-        borderColor: "rgba(255, 255, 255, 0.8)",
-        boxShadow: "0 10px 40px -10px rgba(0,0,0,0.05)",
-        zIndex: 10,
-        opacity: 1,
-      }}
       className={twMerge(
-        "relative flex items-center p-4 rounded-3xl border transition-all mb-3",
+        "relative flex items-center p-4 rounded-3xl border transition-all mb-3 will-change-transform",
         getRankStyles(entry.rank),
         isStreakBroken
           ? "grayscale-[0.5] border-dashed border-slate-300/50"

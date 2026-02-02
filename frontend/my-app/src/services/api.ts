@@ -81,6 +81,17 @@ async function request<T>(
     "Content-Type": "application/json",
   };
 
+  // Add Authorization header from cookie as fallback for cross-site cookie issues
+  if (typeof document !== "undefined") {
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("token="))
+      ?.split("=")[1];
+    if (token) {
+      (headers as any)["Authorization"] = `Bearer ${token}`;
+    }
+  }
+
   const res = await fetch(`${API_BASE}${url}`, {
     ...options,
     headers,

@@ -118,6 +118,7 @@ export default function Home() {
   );
 
   useEffect(() => {
+    // Wait for mount to avoid hydration mismatch
     const proofs = [
       "Your batchmates are already competing.",
       "Someone in your group solved a problem today.",
@@ -195,11 +196,7 @@ export default function Home() {
             </Link>
             {!isAuthenticated && (
               <Link
-                href={
-                  process.env.NEXT_PUBLIC_API_URL
-                    ? `${process.env.NEXT_PUBLIC_API_URL}/auth/google`
-                    : "http://localhost:4000/auth/google"
-                }
+                href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/auth/google`}
                 className="group relative px-6 sm:px-8 py-3 bg-[#1E3A8A] text-white font-bold rounded-full overflow-hidden transition-transform hover:scale-105 active:scale-95 shadow-xl hover:shadow-indigo-500/20 w-full sm:w-auto max-w-[280px] flex justify-center"
               >
                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

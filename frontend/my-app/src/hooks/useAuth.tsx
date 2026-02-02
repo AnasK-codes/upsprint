@@ -45,7 +45,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    fetchUser();
+    // Check for token in URL (from OAuth redirect)
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    if (token) {
+      const isProd = process.env.NODE_ENV === "production";
+      document.cookie = `token=${token}; path=/; max-age=604800; SameSite=Lax; ${isProd ? "Secure" : ""}`;
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // Fetch user with new token
+      fetchUser();
+    } else {
+      fetchUser();
+    }
   }, []);
 
   useEffect(() => {

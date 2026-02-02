@@ -10,6 +10,7 @@ import { authenticate } from "../middleware/auth.middleware.js";
 import { getCache, setCache, clearCachePrefix } from "../utils/cache.js";
 import { VALID_BRANCHES, VALID_PLATFORMS } from "../utils/constants.js";
 import { strictLimiter } from "../middleware/rateLimit.middleware.js";
+import { requireAdmin } from "../middleware/admin.middleware.js";
 
 const router = Router();
 
@@ -387,7 +388,7 @@ router.get("/user/:userId", async (req, res) => {
  * POST /leaderboard/rebuild (manual trigger)
  * Protect with auth (authenticate middleware)
  */
-router.post("/rebuild", authenticate, strictLimiter, async (_req, res) => {
+router.post("/rebuild", authenticate, requireAdmin, strictLimiter, async (_req, res) => {
 
   try {
     // Clear all leaderboard caches

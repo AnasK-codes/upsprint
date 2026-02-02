@@ -9,7 +9,11 @@ const simpleFormat = printf(({ level, message, timestamp, ...meta }) => {
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || "info",
-  format: combine(timestamp(), colorize({ all: true }), simpleFormat),
+  format: combine(
+    timestamp(),
+    ...(process.env.NODE_ENV !== "production" ? [colorize({ all: true })] : []),
+    simpleFormat
+  ),
   transports: [new winston.transports.Console()],
 });
 

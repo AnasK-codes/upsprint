@@ -2,10 +2,11 @@ import { Router } from "express";
 import prisma from "../config/db.js";
 
 import { authenticate } from "../middleware/auth.middleware.js";
+import { requireAdmin } from "../middleware/admin.middleware.js";
 
 const router = Router();
 
-router.get("/jobs/summary", authenticate, async (_req, res) => {
+router.get("/jobs/summary", authenticate, requireAdmin, async (_req, res) => {
   const totalRuns = await prisma.jobRun.count();
 
   const success = await prisma.jobRun.count({

@@ -14,11 +14,13 @@ import { apiLimiter } from "./middleware/rateLimit.middleware.js";
 import adminRoutes from "./routes/admin.routes.js";
 import { getMetricsText } from "./utils/metrics.js";
 import passport from "passport";
-import prisma from "./config/db.js";
 import oauthRoutes from "./routes/oauth.routes.js";
 
 const app = express();
 app.set("trust proxy", 1);
+
+import helmet from "helmet";
+app.use(helmet());
 
 
 // Middleware
@@ -27,7 +29,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(cookieParser());
-app.use(express.json());
+app.use(express.json({ limit: "10kb" }));
 app.use(passport.initialize());
 app.use(apiLimiter);
 
