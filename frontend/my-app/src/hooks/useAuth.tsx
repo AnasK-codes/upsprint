@@ -76,6 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
+    console.log("Auth Guard Check:", { user, pathname, loading });
+
     // Middleware handles server-side protection.
     // Client-side checks are for UX/fallback.
 
@@ -91,11 +93,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Redirect authenticated users away from login/signup
     if (user && isAuthRoute) {
+      console.log("Redirecting to / (Auth Route with User)");
       router.push("/");
     }
 
     // Redirect unauthenticated users away from protected routes
     if (!user && isProtectedRoute) {
+      console.log("Redirecting to /login (Protected Route without User)");
       router.push("/login");
     }
   }, [user, loading, pathname, router]);
