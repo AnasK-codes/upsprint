@@ -31,6 +31,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const publicRoutes = ["/login", "/signup", "/"]; // Add public paths here
 
   const fetchUser = async () => {
+    // Check for token cookie first to avoid 401 spam
+    // This relies on the client-side fallback cookie we verify in api.ts
+    const hasToken = document.cookie
+      .split("; ")
+      .some((row) => row.startsWith("token="));
+
+    if (!hasToken) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       // With cookies, we just try to fetch the profile.
       // If unauthorized, api throws and we catch it.
