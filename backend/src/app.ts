@@ -18,6 +18,7 @@ import prisma from "./config/db.js";
 import oauthRoutes from "./routes/oauth.routes.js";
 
 const app = express();
+app.set("trust proxy", 1);
 
 
 // Middleware
