@@ -40,10 +40,9 @@ export default function LoginPage() {
       });
 
       if (response.token) {
-        // Set cookie manually for frontend middleware to see it
+        // Backend sets httpOnly cookie automatically. We set a fallback for cross-origin.
         const isProd = process.env.NODE_ENV === "production";
-        document.cookie = `token=${response.token}; path=/; max-age=604800; SameSite=Lax; ${isProd ? "Secure" : ""}`;
-        // useAuth login: sets cookie, updates state, redirects
+        document.cookie = `token=${response.token}; path=/; max-age=604800; SameSite=${isProd ? "None" : "Lax"}; ${isProd ? "Secure" : ""}`;
         await login(response.user);
         success("Login successful!");
       } else {

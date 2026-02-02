@@ -31,18 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const publicRoutes = ["/login", "/signup", "/"]; // Add public paths here
 
   const fetchUser = async () => {
-    // Check for token cookie first to avoid 401 spam
-    // This relies on the client-side fallback cookie we verify in api.ts
-    const hasToken = document.cookie
-      .split("; ")
-      .some((row) => row.startsWith("token="));
-
-    if (!hasToken) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
-
     try {
       // With cookies, we just try to fetch the profile.
       // If unauthorized, api throws and we catch it.
@@ -76,8 +64,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
-    console.log("Auth Guard Check:", { user, pathname, loading });
-
     // Middleware handles server-side protection.
     // Client-side checks are for UX/fallback.
 
@@ -93,13 +79,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Redirect authenticated users away from login/signup
     if (user && isAuthRoute) {
-      console.log("Redirecting to / (Auth Route with User)");
       router.push("/");
     }
 
     // Redirect unauthenticated users away from protected routes
     if (!user && isProtectedRoute) {
-      console.log("Redirecting to /login (Protected Route without User)");
       router.push("/login");
     }
   }, [user, loading, pathname, router]);
@@ -119,6 +103,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error("Logout failed:", err);
     }
+
+    // Explicitly clear the client-side cookie (must match backend sameSite)
+    const isProd = process.env.NODE_ENV === "production";
+    document.cookie = `token=; path=/; max-age=0; SameSite=${isProd ? "None" : "Lax"}; ${isProd ? "Secure" : ""}`;
+
     setUser(null);
     router.push("/login");
   };

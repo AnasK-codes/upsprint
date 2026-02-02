@@ -13,7 +13,12 @@ const router = Router();
  */
 router.get("/google", (req, res, next) => {
   const state = crypto.randomBytes(16).toString("hex");
-  res.cookie("oauth_state", state, { httpOnly: true, maxAge: 5 * 60 * 1000 }); // 5 min
+  res.cookie("oauth_state", state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" as const : "lax" as const,
+    maxAge: 5 * 60 * 1000
+  }); // 5 min
 
   passport.authenticate("google", {
     scope: ["profile", "email"],
