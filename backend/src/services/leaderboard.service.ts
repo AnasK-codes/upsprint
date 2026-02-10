@@ -93,8 +93,6 @@ export async function getLeetCodeLeaderboard(
     : Prisma.empty;
 
   // Fetch latest LeetCode snapshots
-  // We need to join User to get name/avatar
-  // ordering by rating desc, then problemsSolved desc
   const rows = await prisma.$queryRaw`
     SELECT
       u.id as "userId",
@@ -160,8 +158,6 @@ export async function getPlatformLeaderboard(
     ? Prisma.sql`AND u.branch = ${filters.branch}`
     : Prisma.empty;
 
-  // Query similar to LeetCode but generic
-  // We prioritize rating, then problemsSolved
   const rows = await prisma.$queryRaw`
     SELECT
       u.id as "userId",

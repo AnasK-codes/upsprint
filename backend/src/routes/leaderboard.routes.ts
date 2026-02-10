@@ -204,11 +204,6 @@ router.get("/", validateFilters, async (req, res) => {
       userWhere.branch = String(branch);
     }
 
-    // Note: Global leaderboard already aggregates scores, so we don't strictly filter by platform 
-    // unless we want to filter users who HAVE that platform account but use their GLOBAL score.
-    // The requirement says "Global leaderboard uses normalizedScore", which implies aggregate.
-    // If a user provides ?platform=all, we return global ranking.
-
     if (Object.keys(userWhere).length > 0) {
       where.user = {
         ...userWhere,
@@ -257,7 +252,6 @@ router.get("/top/:n", async (req, res) => {
     if (cached) return res.json(cached);
 
     const data = await prisma.leaderboard.findMany({
-      // STRICT: Only include users who have opted into global leaderboards
       where: {
         user: {
           leaderboardVisibility: "GLOBAL_AND_GROUPS",
@@ -302,7 +296,6 @@ router.get("/user/:userId", async (req, res) => {
             batch: true,
             branch: true,
             avatarUrl: true,
-            // leaderboardVisibility: removed to prevent metadata leak
             accounts: {
               select: {
                 id: true,
@@ -345,10 +338,7 @@ router.get("/user/:userId", async (req, res) => {
     const currentStreak = accountWithMaxStreak?.currentStreak || 0;
 
     if (!row) {
-      // If user is not yet on the global leaderboard, return partial data if they have connected accounts
-      // AND are visible (checked via the findFirst above)
       if (currentStreak > 0) {
-        // We need to fetch basic user details since 'row' is null
         const userDetails = await prisma.user.findFirst({
           where: { id: userId, leaderboardVisibility: "GLOBAL_AND_GROUPS" as any },
           select: { id: true, name: true, avatarUrl: true }

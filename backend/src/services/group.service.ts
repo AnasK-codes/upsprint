@@ -84,7 +84,6 @@ export async function getGroupMembers(groupId: number) {
         select: {
           id: true,
           name: true,
-          // email: true, // Removed for privacy
           avatarUrl: true,
         },
       },
@@ -167,7 +166,6 @@ export async function getGroupLeaderboard(
     else if (metric === "total_solved") {
       const lc = m.user.accounts.find((a: any) => a.platform.toLowerCase() === "leetcode");
       const lastSnap = lc?.snapshots[0];
-      // rawData is Json, assume it has solved count or use problemsSolved if schema has it
       value = lastSnap?.problemsSolved || 0;
     }
 
@@ -193,16 +191,14 @@ export async function getGroupLeaderboard(
 
   // Map to LeaderboardEntry format
   return paged.map((item, index) => ({
-    id: index + 1, // rank for this specific view
+    id: index + 1,
     rank: (page - 1) * limit + index + 1,
-    score: item.value, // Used generically for the metric value
+    score: item.value,
     user: {
       id: item.user.id,
       name: item.user.name || "Anonymous",
-      // email: item.user.email, // Removed for privacy
       avatarUrl: item.user.avatarUrl,
     },
-    // Populate extra fields if useful for UI context
     currentStreak: metric === "leetcode_streak" ? item.value : undefined,
   }));
 }

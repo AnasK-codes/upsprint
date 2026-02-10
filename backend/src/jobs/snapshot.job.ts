@@ -44,7 +44,6 @@ export async function processAccountSnapshot(acc: any) {
       // Process Daily Activity & Calculate Streaks
       if (data.submissionCalendar) {
         let calendar = data.submissionCalendar;
-        // Defensive: ensure calendar is an object
         if (typeof calendar === 'string') {
           try { calendar = JSON.parse(calendar); } catch (e) { calendar = {}; }
         }
@@ -79,16 +78,14 @@ export async function processAccountSnapshot(acc: any) {
         let expectedDate = today;
 
         // If no activity today, check if activity exists yesterday to keep streak alive?
-        // Actually, scan timestamps. If top is today, streak starts 1. Next must be yesterday.
-        // If top is yesterday, streak starts 1. Next must be day before yesterday.
-        // If top is older, streak is 0.
 
         if (timestamps.length > 0) {
           const lastTs = timestamps[0];
           const lastDate = toDay(lastTs);
           const diffDays = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
 
-          if (diffDays <= 1) { // Activity today (0) or yesterday (1) keeps streak alive
+          if (diffDays <= 1) {
+            // Activity today (0) or yesterday (1) keeps streak alive
             streak = 1;
             let prevDate = lastDate;
 

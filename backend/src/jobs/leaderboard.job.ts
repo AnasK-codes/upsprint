@@ -1,4 +1,3 @@
-// backend/src/jobs/leaderboard.job.ts
 import prisma from "../config/db.js";
 import {
   fetchLatestSnapshotsWithAccountUser,
@@ -10,9 +9,9 @@ import { incCounter, setGauge } from "../utils/metrics.js";
 
 /** Simple platform weights (tweakable) */
 const PLATFORM_WEIGHTS: Record<string, number> = {
-  codeforces: 1.0,
-  leetcode: 0.6,
-  codechef: 0.4,
+  codeforces: 0.6,
+  leetcode: 0.8,
+  codechef: 0.6,
 };
 
 /**

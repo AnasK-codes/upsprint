@@ -40,7 +40,6 @@ export default function LoginPage() {
       });
 
       if (response.token) {
-        // Backend sets httpOnly cookie automatically. We set a fallback for cross-origin.
         const isProd = process.env.NODE_ENV === "production";
         document.cookie = `token=${response.token}; path=/; max-age=604800; SameSite=${isProd ? "None" : "Lax"}; ${isProd ? "Secure" : ""}`;
         await login(response.user);

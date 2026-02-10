@@ -4,10 +4,14 @@ dotenv.config();
 const requiredKeys = [
   "DATABASE_URL",
   "JWT_SECRET",
+  "JWT_EXPIRES_IN",
   "GOOGLE_CLIENT_ID",
   "GOOGLE_CLIENT_SECRET",
   "GOOGLE_CALLBACK_URL",
-  "FRONTEND_URL"
+  "FRONTEND_URL",
+  "NODE_ENV",
+  "ADMIN_EMAILS",
+  "NEXT_PUBLIC_API_URL"
 ];
 
 const missingKeys = requiredKeys.filter((key) => !process.env[key]);

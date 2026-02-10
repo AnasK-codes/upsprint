@@ -1,5 +1,3 @@
-// src/utils/metrics.ts
-
 type Counter = {
   help: string;
   value: number;

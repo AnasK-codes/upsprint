@@ -115,7 +115,6 @@ export const connectAccount = async (req: AuthRequest, res: Response) => {
     });
 
 
-    // Immediate snapshot fetch
     // Immediate snapshot fetch and processing (includes Daily Activity for LeetCode)
     try {
       const { processAccountSnapshot } = await import("../jobs/snapshot.job.js");

@@ -1,12 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  motion,
-  Variants,
-  useMotionTemplate,
-  useMotionValue,
-} from "framer-motion";
+import { motion, Variants, useMotionValue } from "framer-motion";
 import {
   ArrowRight,
   Trophy,
