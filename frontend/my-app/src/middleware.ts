@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const { pathname } = request.nextUrl;
 
   // Protected routes pattern
-  const protectedPaths = ["/profile", "/leaderboard", "/dashboard"];
+  const protectedPaths = ["/profile", "/leaderboard"];
   const isProtected = protectedPaths.some((path) => pathname.startsWith(path));
 
   // Public paths that authenticated users shouldn't access (like login)
