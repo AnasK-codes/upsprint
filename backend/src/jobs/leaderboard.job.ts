@@ -55,22 +55,26 @@ export async function rebuildLeaderboard() {
     }));
     rows.sort((a, b) => b.score - a.score);
 
-    // Clear existing leaderboard to remove stale users
-    await prisma.leaderboard.deleteMany({});
-
-    // Bulk insert new rankings
+    // Build all createMany batch operations upfront
     const BATCH = 200;
+    const createBatches = [];
     for (let i = 0; i < rows.length; i += BATCH) {
-      const batch = rows.slice(i, i + BATCH).map((row, idx) => ({
+      const batchData = rows.slice(i, i + BATCH).map((row, idx) => ({
         userId: row.userId,
         score: row.score,
         rank: i + idx + 1,
       }));
-
-      await prisma.leaderboard.createMany({
-        data: batch,
-      });
+      createBatches.push(prisma.leaderboard.createMany({ data: batchData }));
     }
+
+    // ATOMIC TRANSACTION: wipe and rebuild in one DB transaction.
+    // Guarantees zero downtime — users never see an empty or partial leaderboard.
+    // If any batch insert fails, the deleteMany is rolled back and the old
+    // leaderboard is preserved intact.
+    await prisma.$transaction([
+      prisma.leaderboard.deleteMany({}),
+      ...createBatches,
+    ]);
 
     // clear cache so API returns fresh data
     clearCachePrefix("leaderboard:");

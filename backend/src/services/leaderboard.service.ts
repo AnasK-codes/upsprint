@@ -135,7 +135,6 @@ export async function getLeetCodeLeaderboard(
   }));
 
   return mapped;
-  return mapped;
 }
 
 /**

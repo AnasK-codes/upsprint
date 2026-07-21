@@ -31,15 +31,6 @@ export async function processAccountSnapshot(acc: any) {
       logger.info(`Processed Codeforces snapshot for ${acc.username}`);
     } else if (acc.platform === "leetcode") {
       const data = await fetchLeetCodeProfile(acc.username);
-      await prisma.platformSnapshot.create({
-        data: {
-          linkedAccountId: acc.id,
-          rating: data.rating,
-          rankTitle: null,
-          problemsSolved: data.totalSolved,
-          rawData: data.raw,
-        },
-      });
 
       // Process Daily Activity & Calculate Streaks
       if (data.submissionCalendar) {
@@ -48,98 +39,150 @@ export async function processAccountSnapshot(acc: any) {
           try { calendar = JSON.parse(calendar); } catch (e) { calendar = {}; }
         }
 
-        const operations = [];
-        let totalActiveDays = 0;
-        let lastActivityDate: Date | null = null;
+        const calendarKeys = Object.keys(calendar);
+        const totalActiveDays = calendarKeys.length;
 
-        // Parse and sort dates
-        const timestamps = Object.keys(calendar).map(Number).sort((a, b) => b - a); // Descending
+        // Find the latest activity date from the calendar
+        let maxTimestamp = 0;
+        for (const key of calendarKeys) {
+          const ts = Number(key);
+          if (ts > maxTimestamp) maxTimestamp = ts;
+        }
+        const lastActivityDate: Date | null = maxTimestamp > 0
+          ? new Date(maxTimestamp * 1000)
+          : null;
 
-        let currentStreak = 0;
+        // ─── Optimization 1: O(S) Streak Calculation ───
+        // Instead of sorting ALL timestamps (O(N log N)), walk backward from
+        // today using O(1) dictionary lookups. Cost = O(S) where S = streak length.
         const today = new Date();
         today.setUTCHours(0, 0, 0, 0);
+        const ONE_DAY_SECS = 86400;
+        const todayUnix = Math.floor(today.getTime() / 1000);
 
-        // Helper to normalize date
-        const toDay = (ts: number) => {
-          const d = new Date(ts * 1000);
-          d.setUTCHours(0, 0, 0, 0);
-          return d;
-        };
-
-        // Calculate total active days & find last activity
-        if (timestamps.length > 0) {
-          lastActivityDate = new Date(timestamps[0] * 1000);
-          totalActiveDays = timestamps.length;
+        // Build a Set of normalized day timestamps for O(1) lookup
+        const activeDaySet = new Set<number>();
+        for (const key of calendarKeys) {
+          const ts = Number(key);
+          // Normalize to midnight UTC (floor to day boundary)
+          const dayTs = ts - (ts % ONE_DAY_SECS);
+          activeDaySet.add(dayTs);
         }
 
-        // Calculate Streak (consecutive days looking back from today or yesterday)
-        // If processed today (based on server time), streak continues if activity exists today or yesterday
-        let streak = 0;
-        let expectedDate = today;
+        let currentStreak = 0;
+        // Start checking from today; if no activity today, check yesterday
+        let checkDay = todayUnix - (todayUnix % ONE_DAY_SECS);
 
-        // If no activity today, check if activity exists yesterday to keep streak alive?
-
-        if (timestamps.length > 0) {
-          const lastTs = timestamps[0];
-          const lastDate = toDay(lastTs);
-          const diffDays = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-
-          if (diffDays <= 1) {
-            // Activity today (0) or yesterday (1) keeps streak alive
-            streak = 1;
-            let prevDate = lastDate;
-
-            for (let i = 1; i < timestamps.length; i++) {
-              const currDate = toDay(timestamps[i]);
-              const gap = Math.floor((prevDate.getTime() - currDate.getTime()) / (1000 * 60 * 60 * 24));
-              if (gap === 1) {
-                streak++;
-                prevDate = currDate;
-              } else {
-                break; // Streak broken
-              }
+        if (!activeDaySet.has(checkDay)) {
+          // No activity today — check if yesterday has activity to keep streak alive
+          checkDay -= ONE_DAY_SECS;
+          if (!activeDaySet.has(checkDay)) {
+            // No activity today or yesterday — streak is 0
+            currentStreak = 0;
+          } else {
+            // Activity yesterday, walk backward
+            currentStreak = 1;
+            checkDay -= ONE_DAY_SECS;
+            while (activeDaySet.has(checkDay)) {
+              currentStreak++;
+              checkDay -= ONE_DAY_SECS;
             }
           }
+        } else {
+          // Activity exists today, walk backward
+          currentStreak = 1;
+          checkDay -= ONE_DAY_SECS;
+          while (activeDaySet.has(checkDay)) {
+            currentStreak++;
+            checkDay -= ONE_DAY_SECS;
+          }
         }
-        currentStreak = streak;
 
-        for (const [timestampStr, count] of Object.entries(calendar)) {
-          const timestamp = Number(timestampStr);
-          const date = new Date(timestamp * 1000);
-          date.setUTCHours(0, 0, 0, 0);
+        // ─── Optimization 2: Short-Circuit Early Exit ───
+        // If the user's data hasn't changed since the last sync, skip all DB writes.
+        // We detect "no change" when the latest activity date and streak are identical.
+        const prevLastActivity = acc.lastActivityDate ? new Date(acc.lastActivityDate).getTime() : 0;
+        const newLastActivity = lastActivityDate ? lastActivityDate.getTime() : 0;
+        const hasNewActivity = newLastActivity !== prevLastActivity;
+        const streakChanged = currentStreak !== (acc.currentStreak ?? 0);
+        const totalChanged = totalActiveDays !== (acc.totalActiveDays ?? 0);
 
+        if (!hasNewActivity && !streakChanged && !totalChanged) {
+          // Nothing changed — skip snapshot and DB writes entirely
+          logger.info(`No changes detected for ${acc.username}, skipping DB writes`);
+        } else {
+          // ─── Create snapshot only when there are actual changes ───
+          await prisma.platformSnapshot.create({
+            data: {
+              linkedAccountId: acc.id,
+              rating: data.rating,
+              rankTitle: null,
+              problemsSolved: data.totalSolved,
+              rawData: data.raw,
+            },
+          });
+
+          // ─── Optimization 3: Delta Sync (Watermark-Based Upserts) ───
+          // For existing users: only upsert activity records >= lastActivityDate.
+          // For new users (no lastActivityDate): full sync of entire history.
+          const operations = [];
+
+          const syncFromTime = acc.lastActivityDate
+            ? new Date(acc.lastActivityDate).setUTCHours(0, 0, 0, 0)
+            : 0; // 0 means "sync everything" (new user)
+
+          for (const [timestampStr, count] of Object.entries(calendar)) {
+            const timestamp = Number(timestampStr);
+            const date = new Date(timestamp * 1000);
+            date.setUTCHours(0, 0, 0, 0);
+
+            // Only upsert if this date is on or after the last known sync point
+            if (date.getTime() >= syncFromTime) {
+              operations.push(
+                prisma.dailyActivity.upsert({
+                  where: {
+                    linkedAccountId_date: {
+                      linkedAccountId: acc.id,
+                      date: date,
+                    },
+                  },
+                  update: { count: Number(count) },
+                  create: {
+                    linkedAccountId: acc.id,
+                    date: date,
+                    count: Number(count),
+                  },
+                })
+              );
+            }
+          }
+
+          // Update LinkedAccount stats
           operations.push(
-            prisma.dailyActivity.upsert({
-              where: {
-                linkedAccountId_date: {
-                  linkedAccountId: acc.id,
-                  date: date,
-                },
-              },
-              update: { count: Number(count) },
-              create: {
-                linkedAccountId: acc.id,
-                date: date,
-                count: Number(count),
-              },
+            prisma.linkedAccount.update({
+              where: { id: acc.id },
+              data: {
+                currentStreak,
+                totalActiveDays,
+                lastActivityDate
+              }
             })
           );
+
+          await prisma.$transaction(operations);
+          logger.info(`Processed daily activity & Updated streak (${currentStreak}) for ${acc.username} [${operations.length - 1} activity records synced]`);
         }
-
-        // Update LinkedAccount stats
-        operations.push(
-          prisma.linkedAccount.update({
-            where: { id: acc.id },
-            data: {
-              currentStreak,
-              totalActiveDays,
-              lastActivityDate
-            }
-          })
-        );
-
-        await prisma.$transaction(operations);
-        logger.info(`Processed daily activity & Updated streak (${currentStreak}) for ${acc.username}`);
+      } else {
+        // No submissionCalendar available — still save the snapshot for rating/solve tracking
+        await prisma.platformSnapshot.create({
+          data: {
+            linkedAccountId: acc.id,
+            rating: data.rating,
+            rankTitle: null,
+            problemsSolved: data.totalSolved,
+            rawData: data.raw,
+          },
+        });
       }
 
       logger.info(`Processed LeetCode snapshot for ${acc.username}`);

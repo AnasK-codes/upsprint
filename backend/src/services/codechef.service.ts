@@ -36,6 +36,7 @@ export const fetchCodeChefProfile = async (username: string): Promise<CodeChefPr
     const countryRank = countryRankMatch ? parseInt(countryRankMatch[1], 10) : null;
 
     if (rating === 0 && !response.request.path.includes(username)) {
+      throw new Error("User not found");
     }
 
     return {

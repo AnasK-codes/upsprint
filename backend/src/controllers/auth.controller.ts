@@ -54,7 +54,7 @@ export const generateToken = (userId: number | string) => {
   });
 };
 
-export const login = async (req: any, res: any) => {
+export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
