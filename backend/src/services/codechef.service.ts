@@ -11,7 +11,7 @@ export interface CodeChefProfile {
 
 export const fetchCodeChefProfile = async (username: string): Promise<CodeChefProfile> => {
   try {
-    const response = await axios.get(`https://www.codechef.com/users/${username}`, {
+    const response = await axios.get(`${process.env.CODECHEF_BASE_URL ?? "https://www.codechef.com"}/users/${username}`, {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",

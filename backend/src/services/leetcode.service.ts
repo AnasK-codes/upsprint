@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const LEETCODE_GRAPHQL_URL = "https://leetcode.com/graphql";
+const LEETCODE_GRAPHQL_URL = `${process.env.LEETCODE_BASE_URL ?? "https://leetcode.com"}/graphql`;
 
 const query = `
   query getUserProfile($username: String!) {
