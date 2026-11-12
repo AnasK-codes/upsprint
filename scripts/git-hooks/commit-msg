@@ -1,0 +1,12 @@
+#!/bin/sh
+# Strips AI-assistant attribution from every commit message:
+# Co-Authored-By trailers mentioning Claude/Anthropic, "Generated with Claude Code"
+# footers and Claude-Session trailers. Then trims trailing blank lines.
+# Enable once per clone:  git config core.hooksPath scripts/git-hooks
+msg_file="$1"
+tmp="$(mktemp)"
+grep -v -i -E '^(co-authored-by:.*(claude|anthropic)|.*generated with \[?claude code|claude-session:)' "$msg_file" \
+  | awk '{ lines[NR] = $0 } END { n = NR; while (n > 0 && lines[n] ~ /^[[:space:]]*$/) n--; for (i = 1; i <= n; i++) print lines[i] }' \
+  > "$tmp"
+cat "$tmp" > "$msg_file"
+rm -f "$tmp"
