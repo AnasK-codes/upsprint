@@ -1,0 +1,129 @@
+# Local stack: docker compose up --build
+# Copy .env.example to .env first (secrets and OAuth credentials live there).
+
+x-api-env: &api-env
+  NODE_ENV: ${NODE_ENV:-development}
+  DATABASE_URL: postgresql://${POSTGRES_USER:-upsprint}:${POSTGRES_PASSWORD:-upsprint}@postgres:5432/${POSTGRES_DB:-upsprint}
+  REDIS_URL: redis://redis:6379
+  JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+  JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+  GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-unset}
+  GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-unset}
+  GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:4000/auth/google/callback}
+  FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+  NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+  ADMIN_EMAILS: ${ADMIN_EMAILS:-admin@example.com}
+  METRICS_TOKEN: ${METRICS_TOKEN:-}
+  COOKIE_SAMESITE: ${COOKIE_SAMESITE:-}
+  COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-upsprint}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-upsprint}
+      POSTGRES_DB: ${POSTGRES_DB:-upsprint}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # One-shot: applies pending Prisma migrations, then exits.
+  migrate:
+    build:
+      context: ./backend
+    command: ["npx", "prisma", "migrate", "deploy"]
+    environment: *api-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: ./backend
+    environment: *api-env
+    ports:
+      - "4000:4000"
+    init: true
+    stop_grace_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:4000/readyz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  # Stub: same image as the API. The real entrypoint (dist/worker.js) arrives in
+  # Step 2.2, so it idles until then. Opt in with: docker compose --profile worker up
+  worker:
+    build:
+      context: ./backend
+    # TODO(step 2.2): command: ["node", "dist/worker.js"]
+    command: ["node", "-e", "console.log('worker stub (Step 2.2)'); setInterval(() => {}, 1 << 30)"]
+    environment: *api-env
+    init: true
+    stop_grace_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+    profiles: ["worker"]
+
+  web:
+    build:
+      context: ./frontend/my-app
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:

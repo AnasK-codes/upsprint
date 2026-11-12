@@ -74,10 +74,22 @@ A competitive programming platform that aggregates multi-platform stats (LeetCod
 
 ## Local Setup
 
-### Prerequisites
+### Docker (recommended)
 
-- Node.js 18+
-- PostgreSQL 14+
+Prerequisites: Docker with Compose v2.
+
+```bash
+cp .env.example .env   # set JWT_SECRET (openssl rand -hex 32) and Google OAuth credentials
+docker compose up --build
+```
+
+This starts Postgres, Redis, a one-shot `migrate` job (`prisma migrate deploy`), the API
+(http://localhost:4000, probes at `/healthz` and `/readyz`) and the web app (http://localhost:3000).
+The `worker` service is a stub until Step 2.2; opt in with `docker compose --profile worker up`.
+
+### Without Docker
+
+Prerequisites: Node.js 22+, PostgreSQL 14+, Redis (optional until Step 2.2).
 
 ### Backend
 
