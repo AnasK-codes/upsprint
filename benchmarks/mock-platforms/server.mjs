@@ -13,6 +13,7 @@ const JITTER = Number(process.env.MOCK_JITTER_MS ?? 0);
 const ERROR_RATE = Number(process.env.MOCK_ERROR_RATE ?? 0);
 const rng = mulberry32(Number(process.env.MOCK_SEED ?? 1));
 
+const control = { failNext: 0, failStatus: 500, latencyMs: null };
 const stats = { total: 0, errors: 0, leetcode: 0, codeforces: 0, codechef: 0 };
 const today = () => dayStart(Math.floor(Date.now() / 1000));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -35,10 +36,26 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://mock");
   if (url.pathname === "/__health") return json(res, 200, { ok: true });
   if (url.pathname === "/__stats") return json(res, 200, stats);
+  // Test control (integration tests): POST /__control {"failNext": n, "failStatus": 500, "latencyMs": n}
+  // makes the next n platform requests return failStatus; POST /__reset clears control state and stats.
+  if (url.pathname === "/__control" && req.method === "POST") {
+    Object.assign(control, JSON.parse((await readBody(req)) || "{}"));
+    return json(res, 200, control);
+  }
+  if (url.pathname === "/__reset" && req.method === "POST") {
+    Object.assign(control, { failNext: 0, failStatus: 500, latencyMs: null });
+    for (const k of Object.keys(stats)) stats[k] = 0;
+    return json(res, 200, control);
+  }
 
   stats.total++;
-  const delay = LATENCY + (JITTER ? Math.round((rng() * 2 - 1) * JITTER) : 0);
+  const delay = (control.latencyMs ?? LATENCY) + (JITTER ? Math.round((rng() * 2 - 1) * JITTER) : 0);
   if (delay > 0) await sleep(delay);
+  if (control.failNext > 0) {
+    control.failNext--;
+    stats.errors++;
+    return json(res, control.failStatus, { error: "mock controlled failure" });
+  }
   if (ERROR_RATE > 0 && rng() < ERROR_RATE) {
     stats.errors++;
     return json(res, 500, { error: "mock injected failure" });
@@ -59,12 +76,17 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === "GET" && url.pathname === "/api/user.info") {
       stats.codeforces++;
-      const handle = url.searchParams.get("handles") ?? "";
-      if (!handle || handle.startsWith("nouser_")) {
-        return json(res, 400, { status: "FAILED", comment: `handles: User with handle ${handle} not found` });
+      // Like the real API, "h1;h2;..." looks up several handles and ONE unknown handle fails the whole call.
+      const handles = (url.searchParams.get("handles") ?? "").split(";").filter(Boolean);
+      const bad = handles.find((h) => h.startsWith("nouser_"));
+      if (handles.length === 0 || bad) {
+        return json(res, 400, { status: "FAILED", comment: `handles: User with handle ${bad ?? ""} not found` });
       }
-      const p = profileFor(handle, today()).codeforces;
-      return json(res, 200, { status: "OK", result: [codeforcesUser(handle, p, Math.floor(Date.now() / 1000))] });
+      const nowUnix = Math.floor(Date.now() / 1000);
+      return json(res, 200, {
+        status: "OK",
+        result: handles.map((h) => codeforcesUser(h, profileFor(h, today()).codeforces, nowUnix)),
+      });
     }
 
     const m = url.pathname.match(/^\/users\/([^/]+)$/);

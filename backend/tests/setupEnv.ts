@@ -15,3 +15,6 @@ process.env.ADMIN_EMAILS = "admin@example.test";
 process.env.NEXT_PUBLIC_API_URL = "http://localhost:4000";
 process.env.LOG_LEVEL = "error";
 delete process.env.METRICS_TOKEN;
+// Not REDIS_URL: that would switch every rate limiter to Redis in every test file.
+// Queue tests opt in by copying this into REDIS_URL themselves.
+process.env.TEST_REDIS_URL = inject("redisUrl");

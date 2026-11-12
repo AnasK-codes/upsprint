@@ -17,6 +17,7 @@ x-api-env: &api-env
   COOKIE_SAMESITE: ${COOKIE_SAMESITE:-}
   COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
   LOG_LEVEL: ${LOG_LEVEL:-info}
+  SYNC_INTERVAL_HOURS: ${SYNC_INTERVAL_HOURS:-6}
 
 services:
   postgres:
@@ -84,16 +85,16 @@ services:
       start_period: 20s
     restart: unless-stopped
 
-  # Stub: same image as the API. The real entrypoint (dist/worker.js) arrives in
-  # Step 2.2, so it idles until then. Opt in with: docker compose --profile worker up
+  # Same image as the API, different command: runs the BullMQ workers (per-platform
+  # sync queues, leaderboard queue) and registers the repeatable schedules.
+  # Scale with: docker compose up --scale worker=3
   worker:
     build:
       context: ./backend
-    # TODO(step 2.2): command: ["node", "dist/worker.js"]
-    command: ["node", "-e", "console.log('worker stub (Step 2.2)'); setInterval(() => {}, 1 << 30)"]
+    command: ["node", "dist/worker.js"]
     environment: *api-env
     init: true
-    stop_grace_period: 30s
+    stop_grace_period: 40s
     depends_on:
       postgres:
         condition: service_healthy
@@ -102,9 +103,12 @@ services:
       migrate:
         condition: service_completed_successfully
     healthcheck:
-      disable: true
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:4001/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
     restart: unless-stopped
-    profiles: ["worker"]
 
   web:
     build:

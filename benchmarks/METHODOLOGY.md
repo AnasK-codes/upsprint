@@ -35,6 +35,7 @@ sequential `runAllSnapshots`, the in-memory cache, etc.
 - Baseline numbers come only from `baseline-v1-bench`. Before/after comparisons use the same machine,
   dataset (seed, anchor date, scale), mock-platform settings and load profile.
 - Never hit the real LeetCode/Codeforces/CodeChef. Always set the three `*_BASE_URL` vars to the mock.
+- Note (Step 2.2): the API no longer runs cron at all, so `DISABLE_CRON` is now a harmless no-op that `scripts/api.sh` still exports. Baseline runs use the `baseline-v1` tag, where it is honoured.
 - Run the API with `DISABLE_CRON=true`, `NODE_ENV=production`, against the bench DB on :5433.
 - Raw outputs go under `benchmarks/results/`. Anything not yet measured is `[MEASURE]` in docs.
 - If a result looks too good, check cache hits, error responses and rate limiting first.
