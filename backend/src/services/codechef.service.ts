@@ -13,7 +13,7 @@ export interface CodeChefProfile {
 export const fetchCodeChefProfile = async (username: string): Promise<CodeChefProfile> => {
   try {
     const response = await axios.get(
-      `https://www.codechef.com/users/${encodeURIComponent(username)}`,
+      `${process.env.CODECHEF_BASE_URL ?? "https://www.codechef.com"}/users/${encodeURIComponent(username)}`,
       platformRequestConfig
     );
 

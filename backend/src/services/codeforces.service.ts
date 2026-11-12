@@ -3,7 +3,7 @@ import { platformRequestConfig } from "../utils/http.js";
 
 export const fetchCodeforcesUser = async (handle: string) => {
   const res = await axios.get(
-    `https://codeforces.com/api/user.info?handles=${encodeURIComponent(handle)}`,
+    `${process.env.CODEFORCES_BASE_URL ?? "https://codeforces.com"}/api/user.info?handles=${encodeURIComponent(handle)}`,
     platformRequestConfig
   );
 

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { HTTP_TIMEOUT_MS, USER_AGENT } from "../utils/http.js";
 
-const LEETCODE_GRAPHQL_URL = "https://leetcode.com/graphql";
+const LEETCODE_GRAPHQL_URL = `${process.env.LEETCODE_BASE_URL ?? "https://leetcode.com"}/graphql`;
 
 const query = `
   query getUserProfile($username: String!) {

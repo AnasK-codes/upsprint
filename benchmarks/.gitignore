@@ -1,0 +1,5 @@
+node_modules
+.env.bench
+*.log
+k6/fixtures.json
+.run/

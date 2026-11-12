@@ -11,7 +11,7 @@ const SHUTDOWN_TIMEOUT_MS = Number(process.env.SHUTDOWN_TIMEOUT_MS) || 10_000;
 
 const server = app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
-  startCronJobs();
+  if (process.env.DISABLE_CRON !== "true") startCronJobs();
 });
 
 let shuttingDown = false;
