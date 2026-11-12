@@ -127,8 +127,12 @@ export const connectAccount = async (req: AuthRequest, res: Response) => {
 
     } catch (fetchErr: any) {
       console.error(`Immediate fetch/update failed for ${platform}:${username}`, fetchErr.message);
-      // Undo account creation
-      await prisma.linkedAccount.delete({ where: { id: newAccount.id } });
+      // Undo account creation, including any snapshot/activity rows written before the failure
+      await prisma.$transaction([
+        prisma.platformSnapshot.deleteMany({ where: { linkedAccountId: newAccount.id } }),
+        prisma.dailyActivity.deleteMany({ where: { linkedAccountId: newAccount.id } }),
+        prisma.linkedAccount.delete({ where: { id: newAccount.id } }),
+      ]);
       return res.status(400).json({ message: "Invalid username or API error" });
     }
 

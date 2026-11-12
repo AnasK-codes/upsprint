@@ -53,11 +53,7 @@ describe("POST /users/accounts/connect", () => {
     expect(await prisma.leaderboard.findUnique({ where: { userId } })).not.toBeNull();
   });
 
-  // KNOWN BUG (out of scope for step 1.1): processAccountSnapshot() catches and logs
-  // every error, so connectAccount never sees the failure and returns 201 for
-  // invalid usernames. `it.fails` passes while the bug exists and starts failing
-  // once it is fixed, at which point change it to a plain `it`.
-  it.fails("rolls the account back with 400 when the platform fetch fails", async () => {
+  it("rolls the account back with 400 when the platform fetch fails", async () => {
     mockedLeetCode.mockRejectedValue(new Error("User not found"));
     const { cookie } = await registerUser();
 

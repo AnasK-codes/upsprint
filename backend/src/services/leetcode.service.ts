@@ -1,7 +1,8 @@
 import axios from "axios";
 import { HTTP_TIMEOUT_MS, USER_AGENT } from "../utils/http.js";
 
-const LEETCODE_GRAPHQL_URL = `${process.env.LEETCODE_BASE_URL ?? "https://leetcode.com"}/graphql`;
+// Resolved per call so tests and benchmarks can point LEETCODE_BASE_URL at the mock server.
+const leetcodeGraphqlUrl = () => `${process.env.LEETCODE_BASE_URL ?? "https://leetcode.com"}/graphql`;
 
 const query = `
   query getUserProfile($username: String!) {
@@ -29,7 +30,7 @@ const query = `
 export const fetchLeetCodeProfile = async (username: string) => {
   try {
     const response = await axios.post(
-      LEETCODE_GRAPHQL_URL,
+      leetcodeGraphqlUrl(),
       {
         query,
         variables: { username },

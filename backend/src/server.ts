@@ -1,8 +1,9 @@
 import "./env.js";
 import app from "./app.js";
-import { startCronJobs } from "./jobs/scheduler.js";
 import { closeDb } from "./config/db.js";
 import { closeRedis } from "./config/redis.js";
+import { closeRateLimitRedis } from "./middleware/rateLimit.middleware.js";
+import { closeQueues } from "./queues/index.js";
 import { markShuttingDown } from "./services/health.service.js";
 import logger from "./utils/logger.js";
 
@@ -11,7 +12,6 @@ const SHUTDOWN_TIMEOUT_MS = Number(process.env.SHUTDOWN_TIMEOUT_MS) || 10_000;
 
 const server = app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
-  if (process.env.DISABLE_CRON !== "true") startCronJobs();
 });
 
 let shuttingDown = false;
@@ -39,7 +39,7 @@ async function shutdown(signal: string): Promise<void> {
       // Drop keep-alive sockets that are idle so they don't hold the drain open.
       server.closeIdleConnections();
     });
-    await Promise.all([closeDb(), closeRedis()]);
+    await Promise.all([closeDb(), closeRedis(), closeRateLimitRedis(), closeQueues()]);
     logger.info("Shutdown complete");
     process.exit(0);
   } catch (err) {

@@ -27,6 +27,14 @@ export function getRedis(): Redis | null {
   return client;
 }
 
+/** Shared client, connected on demand. Throws if REDIS_URL is unset or unreachable. */
+export async function getConnectedRedis(): Promise<Redis> {
+  const c = getRedis();
+  if (!c) throw new Error("REDIS_URL is not set");
+  if (c.status === "wait") await c.connect();
+  return c;
+}
+
 export async function closeRedis(): Promise<void> {
   if (!client) return;
   const c = client;

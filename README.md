@@ -18,7 +18,7 @@ A competitive programming platform that aggregates multi-platform stats (LeetCod
 **Database**: PostgreSQL with Prisma ORM  
 **Auth**: Google OAuth 2.0 (Passport.js), httpOnly cookies  
 **Caching**: In-memory LRU cache for leaderboard queries  
-**Jobs**: Cron-based snapshot workers for platform data sync
+**Jobs**: BullMQ (Redis) queues and a separate worker process for platform data sync
 
 ## Architecture
 
@@ -40,15 +40,16 @@ A competitive programming platform that aggregates multi-platform stats (LeetCod
                          ▲
                          │
                   ┌──────┴───────┐
-                  │  Cron Jobs   │
-                  │  - Snapshots │
-                  │  - Rankings  │
+                  │ Worker (BullMQ│
+                  │ + Redis)     │
+                  │ - Sync/plat. │
+                  │ - Rankings   │
                   └──────────────┘
 ```
 
 **Data Flow**:
 
-1. Cron jobs fetch platform data (LeetCode/Codeforces/CodeChef APIs)
+1. A repeatable scheduler job enqueues one sync job per linked account (Codeforces: one per batch of handles); per-platform queues fetch the data (LeetCode/Codeforces/CodeChef) with rate limits, retries and circuit breakers
 2. Snapshots stored in `PlatformSnapshot` and `DailyActivity` tables
 3. Leaderboard rebuild job calculates normalized scores
 4. API serves cached leaderboard data with DB-level visibility filtering
@@ -110,12 +111,20 @@ cp .env.example .env.local  # Set NEXT_PUBLIC_API_URL=http://localhost:4000
 npm run dev  # Runs on port 3000
 ```
 
-### Cron Jobs (Optional)
+### Worker (background sync)
+
+The API process runs no background jobs. `src/worker.ts` is a separate entrypoint:
 
 ```bash
 cd backend
-npm run snapshot  # Manual trigger for testing
+npm run build
+REDIS_URL=redis://localhost:6379 node dist/worker.js   # or: docker compose up worker
 ```
+
+- Queues: `sync-leetcode`, `sync-codeforces`, `sync-codechef` (each with its own rate limiter, concurrency and circuit breaker), `leaderboard`, and `scheduler`.
+- Every `SYNC_INTERVAL_HOURS` (default 6) a repeatable job enqueues all accounts with random jitter. Job ids are `accountId-window`, so several worker replicas never double-enqueue. There is no sync at startup.
+- Failed jobs retry with exponential backoff and jitter; jobs that exhaust their attempts stay in the queue's failed set (our dead-letter queue). Counts are in `GET /admin/jobs/summary`; a read-only Bull Board is at `/admin/queues` (admin only).
+- With `REDIS_URL` set, API rate limits are shared across replicas through Redis. See `backend/.env.example` for all tunables.
 
 ## Future Improvements
 
