@@ -2,6 +2,8 @@
 import { Router } from "express";
 import prisma from "../config/db.js";
 import { authenticate } from "../middleware/auth.middleware.js";
+import { validate } from "../middleware/validate.middleware.js";
+import { createGroupBody, joinGroupBody, groupIdParams, groupLeaderboardQuery } from "../validation/schemas.js";
 import {
   getUserGroups,
   getGroupLeaderboard,
@@ -32,7 +34,7 @@ router.get("/me", authenticate, async (req: any, res) => {
  * POST /groups
  * Create a new group
  */
-router.post("/", authenticate, async (req: any, res) => {
+router.post("/", authenticate, validate({ body: createGroupBody }), async (req: any, res) => {
   try {
     const userId = req.userId;
     const { name, description } = req.body;
@@ -59,7 +61,7 @@ router.post("/", authenticate, async (req: any, res) => {
  * POST /groups/join
  * Join a group via code
  */
-router.post("/join", authenticate, async (req: any, res) => {
+router.post("/join", authenticate, validate({ body: joinGroupBody }), async (req: any, res) => {
   try {
     const userId = req.userId;
     const { code } = req.body;
@@ -86,7 +88,7 @@ router.post("/join", authenticate, async (req: any, res) => {
  * POST /groups/:groupId/leave
  * Leave a group
  */
-router.post("/:groupId/leave", authenticate, async (req: any, res) => {
+router.post("/:groupId/leave", authenticate, validate({ params: groupIdParams }), async (req: any, res) => {
   try {
     const userId = req.userId;
     const groupId = Number(req.params.groupId);
@@ -103,7 +105,7 @@ router.post("/:groupId/leave", authenticate, async (req: any, res) => {
  * GET /groups/:groupId/members
  * Get members of a group
  */
-router.get("/:groupId/members", authenticate, async (req: any, res) => {
+router.get("/:groupId/members", authenticate, validate({ params: groupIdParams }), async (req: any, res) => {
   try {
     const groupId = Number(req.params.groupId);
     const userId = req.userId;
@@ -134,7 +136,7 @@ router.get("/:groupId/members", authenticate, async (req: any, res) => {
  * GET /groups/:groupId/leaderboard
  * Fetch leaderboard for a specific group
  */
-router.get("/:groupId/leaderboard", authenticate, async (req: any, res) => {
+router.get("/:groupId/leaderboard", authenticate, validate({ params: groupIdParams, query: groupLeaderboardQuery }), async (req: any, res) => {
   try {
     const groupId = Number(req.params.groupId);
     const page = Math.max(1, Number(req.query.page) || 1);

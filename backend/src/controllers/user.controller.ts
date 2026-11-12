@@ -278,8 +278,9 @@ export const updateLeaderboardVisibility = async (req: AuthRequest, res: Respons
       } as any,
     });
 
-    // Clear leaderboard cache so changes are reflected immediately
-    await import("../utils/cache.js").then(m => m.clearCachePrefix("leaderboard:"));
+    // Visibility changes who is ranked, so re-rank (this also clears the leaderboard cache)
+    const { rebuildLeaderboard } = await import("../jobs/leaderboard.job.js");
+    await rebuildLeaderboard();
 
     // Fetch full profile to return (ensures consistent state)
     const fullProfile = await prisma.user.findUnique({

@@ -39,14 +39,9 @@ export default function LoginPage() {
         password: formData.password,
       });
 
-      if (response.token) {
-        const isProd = process.env.NODE_ENV === "production";
-        document.cookie = `token=${response.token}; path=/; max-age=604800; SameSite=${isProd ? "None" : "Lax"}; ${isProd ? "Secure" : ""}`;
-        await login(response.user);
-        success("Login successful!");
-      } else {
-        throw new Error("No token received");
-      }
+      // The backend set the httpOnly cookie; no token is exposed to JS.
+      await login(response.user);
+      success("Login successful!");
     } catch (err: any) {
       setFormError(err.message || "Invalid email or password.");
     } finally {

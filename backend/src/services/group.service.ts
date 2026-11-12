@@ -1,5 +1,8 @@
 
+import { Prisma } from "@prisma/client";
 import prisma from "../config/db.js";
+import { generateInviteCode } from "../utils/inviteCode.js";
+import { competitionRanks } from "../utils/ranking.js";
 
 export async function getUserGroups(userId: number) {
   return prisma.groupMember.findMany({
@@ -10,31 +13,30 @@ export async function getUserGroups(userId: number) {
   });
 }
 
+const MAX_CODE_ATTEMPTS = 5;
+
 export async function createGroup(userId: number, name: string, description?: string) {
-  // Generate a random 6-character code
-  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  // Codes are random; on the (rare) unique-constraint collision, retry with a new one.
+  // The retry wraps the whole transaction because a failed statement aborts it in Postgres.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const group = await tx.group.create({
+          data: { name, description, code: generateInviteCode() },
+        });
 
-  // Create group and add creator as admin
-  // Use a transaction to ensure integrity
-  return prisma.$transaction(async (tx) => {
-    const group = await tx.group.create({
-      data: {
-        name,
-        description,
-        code,
-      },
-    });
+        await tx.groupMember.create({
+          data: { userId, groupId: group.id, role: "ADMIN" },
+        });
 
-    await tx.groupMember.create({
-      data: {
-        userId,
-        groupId: group.id,
-        role: "ADMIN",
-      },
-    });
-
-    return group;
-  });
+        return group;
+      });
+    } catch (err) {
+      const collision =
+        err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
+      if (!collision || attempt >= MAX_CODE_ATTEMPTS) throw err;
+    }
+  }
 }
 
 export async function joinGroup(userId: number, code: string) {
@@ -66,13 +68,29 @@ export async function joinGroup(userId: number, code: string) {
 }
 
 export async function leaveGroup(userId: number, groupId: number) {
-  return prisma.groupMember.delete({
-    where: {
-      userId_groupId: {
-        userId,
-        groupId,
-      },
-    },
+  return prisma.$transaction(async (tx) => {
+    const left = await tx.groupMember.delete({
+      where: { userId_groupId: { userId, groupId } },
+    });
+
+    // Never leave a group without an admin.
+    if (left.role === "ADMIN") {
+      const remainingAdmins = await tx.groupMember.count({ where: { groupId, role: "ADMIN" } });
+      if (remainingAdmins === 0) {
+        const oldest = await tx.groupMember.findFirst({
+          where: { groupId },
+          orderBy: [{ joinedAt: "asc" }, { id: "asc" }],
+        });
+        if (oldest) {
+          await tx.groupMember.update({ where: { id: oldest.id }, data: { role: "ADMIN" } });
+        } else {
+          // Last member left: remove the empty group.
+          await tx.group.delete({ where: { id: groupId } });
+        }
+      }
+    }
+
+    return left;
   });
 }
 
@@ -143,13 +161,14 @@ export async function getGroupLeaderboard(
 
     // Activity: Today
     else if (metric === "activity_today") {
+      // DailyActivity dates are stored at UTC midnight, so compare UTC days.
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      today.setUTCHours(0, 0, 0, 0);
       value = m.user.accounts.reduce((acc: number, account: any) => {
         // Filter dailyActivity manually if the DB query didn't limit it strictly enough or for safety
         const todayActivity = account.dailyActivity.find((d: any) => {
           const dDate = new Date(d.date);
-          dDate.setHours(0, 0, 0, 0);
+          dDate.setUTCHours(0, 0, 0, 0);
           return dDate.getTime() === today.getTime();
         });
         return acc + (todayActivity?.count || 0);
@@ -189,10 +208,14 @@ export async function getGroupLeaderboard(
   // Paginate
   const paged = rankedMembers.slice((page - 1) * limit, page * limit);
 
+  // Standard competition ranking over the whole sorted group (ties share a rank).
+  const ranks = competitionRanks(rankedMembers, (m) => m.value);
+  const pagedRanks = ranks.slice((page - 1) * limit, page * limit);
+
   // Map to LeaderboardEntry format
   return paged.map((item, index) => ({
     id: index + 1,
-    rank: (page - 1) * limit + index + 1,
+    rank: pagedRanks[index],
     score: item.value,
     user: {
       id: item.user.id,

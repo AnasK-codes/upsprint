@@ -2,24 +2,14 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import prisma from "../config/db.js";
 import jwt from "jsonwebtoken";
-import { VALID_BRANCHES, COOKIE_OPTIONS } from "../utils/constants.js";
+import { COOKIE_OPTIONS } from "../utils/constants.js";
+import { consumeOAuthCode } from "../services/oauthCode.service.js";
 
 export const register = async (req: Request, res: Response) => {
   try {
     const { email, password, name, batch, branch } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and Password required" });
-    }
-
-    if (batch && !/^\d{4}$/.test(String(batch))) {
-      return res.status(400).json({ message: "Invalid batch year" });
-    }
-
-    if (branch && !VALID_BRANCHES.includes(branch)) {
-      return res.status(400).json({ message: "Invalid branch" });
-    }
-
+    // Body is validated by validate(registerBody) in auth.routes.ts.
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -41,7 +31,11 @@ export const register = async (req: Request, res: Response) => {
     const token = generateToken(user.id);
     res.cookie("token", token, COOKIE_OPTIONS);
 
-    res.status(201).json({ message: "User created successfully", token });
+    // The JWT is only delivered via the httpOnly cookie, never in the body.
+    res.status(201).json({
+      message: "User created successfully",
+      user: { id: user.id, email: user.email, name: user.name },
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -57,10 +51,6 @@ export const generateToken = (userId: number | string) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password required" });
-    }
 
     const user = await prisma.user.findUnique({
       where: { email },
@@ -85,13 +75,39 @@ export const login = async (req: Request, res: Response) => {
 
     res.json({
       message: "Login successful",
-      token,
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
       }
     });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
+ * POST /auth/exchange: trade the one-time code from the Google redirect for
+ * the httpOnly auth cookie. The code is single use and expires after ~60s.
+ */
+export const exchangeCode = async (req: Request, res: Response) => {
+  try {
+    const userId = await consumeOAuthCode(req.body.code);
+    if (userId === null) {
+      return res.status(400).json({ message: "Invalid or expired code" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true },
+    });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired code" });
+    }
+
+    res.cookie("token", generateToken(user.id), COOKIE_OPTIONS);
+    res.json({ message: "Login successful", user });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });

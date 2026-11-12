@@ -2,8 +2,10 @@ import { Router } from "express";
 import passport from "passport";
 import crypto from "crypto";
 import "../config/passport.js";
-import { generateToken } from "../controllers/auth.controller.js";
-import { COOKIE_OPTIONS } from "../utils/constants.js";
+import { issueOAuthCode } from "../services/oauthCode.service.js";
+import { validate } from "../middleware/validate.middleware.js";
+import { oauthCallbackQuery } from "../validation/schemas.js";
+import logger from "../utils/logger.js";
 
 const router = Router();
 
@@ -32,13 +34,14 @@ router.get("/google", (req, res, next) => {
  */
 router.get(
   "/google/callback",
+  validate({ query: oauthCallbackQuery.loose() }),
   (req, res, next) => {
     // Validate state
     const storedState = req.cookies["oauth_state"];
     const queryState = req.query.state as string;
 
     if (!storedState || !queryState || storedState !== queryState) {
-      console.error("OAuth state mismatch!", { storedState, queryState });
+      logger.warn("OAuth state mismatch");
       return res.status(403).json({ message: "Invalid state parameter (CSRF)" });
     }
 
@@ -49,15 +52,20 @@ router.get(
     session: false,
     failureRedirect: "/login",
   }),
-  (req, res) => {
-    const user = req.user as any;
-    const token = generateToken(user.id);
+  async (req, res) => {
+    try {
+      const user = req.user as { id: number };
 
-    // Set cookie
-    res.cookie("token", token, COOKIE_OPTIONS);
-
-    // redirect back to frontend home with token
-    res.redirect(`${process.env.FRONTEND_URL}/?token=${token}`);
+      // Hand the frontend a short-lived one-time code, never the JWT. The
+      // frontend exchanges it via POST /auth/exchange, which sets the cookie.
+      const code = await issueOAuthCode(user.id);
+      const url = new URL("/oauth-success", process.env.FRONTEND_URL);
+      url.searchParams.set("code", code);
+      res.redirect(url.toString());
+    } catch (err) {
+      logger.error("OAuth callback failed", { error: err });
+      res.redirect(new URL("/login?error=oauth", process.env.FRONTEND_URL).toString());
+    }
   }
 );
 

@@ -55,11 +55,22 @@ A competitive programming platform that aggregates multi-platform stats (LeetCod
 
 ## Security & Privacy
 
-- **Auth**: httpOnly cookies, CSRF protection, rate limiting
+- **Sessions**: the JWT lives only in an `httpOnly` cookie set by the backend. It is never returned in a JSON body, never put in a URL, and frontend JavaScript cannot read it. Requests authenticate by cookie only (`credentials: "include"`); there is no Bearer-header path.
+- **Google sign-in**: the OAuth callback redirects to the frontend with a random one-time code (stored hashed in the `OAuthCode` table, single use, ~60s lifetime). The frontend exchanges it with `POST /auth/exchange`, which sets the cookie. The OAuth `state` is also checked against an httpOnly cookie.
+- **CSRF**: because the cookie can be sent cross-site (`SameSite=None` in the default production setup), every state-changing request (POST/PUT/PATCH/DELETE) is checked by an `Origin` (falling back to `Referer`) check against `FRONTEND_URL`. A cookie-bearing request with neither header is rejected. This is an Origin check, not a double-submit token.
+- **Rate limiting**: in-memory, per process (not shared across instances); stricter limits on auth endpoints.
+- **Input validation**: request bodies, query strings and route params are validated with zod; invalid input returns `400 { message, errors }`.
+- **Metrics**: `/metrics` requires `Authorization: Bearer $METRICS_TOKEN` and is disabled (404) when `METRICS_TOKEN` is unset.
 - **Visibility Enforcement**: DB-level filtering for `GROUPS_ONLY` users (never appear in global APIs)
 - **User Isolation**: Membership verification before group data access
 - **Minimal Responses**: Only required fields returned, no internal IDs leaked
-- **Input Validation**: Batch/branch/platform filters validated against constants
+
+### Deployment and cookies
+
+- **Recommended: same site.** Serve the frontend and API under one registrable domain (e.g. `app.example.com` and `api.example.com`) and set `COOKIE_SAMESITE=lax` and `COOKIE_DOMAIN=.example.com` on the backend. This keeps working in browsers that block third-party cookies.
+- **Cross-site (e.g. `*.vercel.app` frontend + `*.onrender.com` API)**: the default in production is `SameSite=None; Secure`. Browsers that block third-party cookies (Safari by default, Chrome in some modes) will drop it and login will not persist. There is no longer a JS-readable fallback token.
+- Backend env: `FRONTEND_URL` must exactly match the frontend origin (used for CORS, the CSRF Origin check and the OAuth redirect); `NODE_ENV=production` (HTTPS is required for `Secure`); `GOOGLE_CALLBACK_URL` must be registered in Google Cloud. Frontend env: `NEXT_PUBLIC_API_URL` points at the API.
+- The frontend no longer has an edge middleware gate (it cannot see a cookie set on the API's domain); route protection is client-side via `useAuth`, and the API enforces auth.
 
 ## Local Setup
 

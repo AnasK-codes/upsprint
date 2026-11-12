@@ -3,6 +3,8 @@ import prisma from "../config/db.js";
 import { fetchCodeforcesUser } from "../services/codeforces.service.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { snapshotLimiter } from "../middleware/rateLimit.middleware.js";
+import { validate } from "../middleware/validate.middleware.js";
+import { accountIdParams } from "../validation/schemas.js";
 
 const router = Router();
 
@@ -10,7 +12,7 @@ const router = Router();
  * Manual snapshot trigger
  * POST /snapshots/codeforces/:accountId
  */
-router.post("/codeforces/:accountId", authenticate, snapshotLimiter, async (req: any, res) => {
+router.post("/codeforces/:accountId", authenticate, snapshotLimiter, validate({ params: accountIdParams }), async (req: any, res) => {
   const accountId = Number(req.params.accountId);
 
   const account = await prisma.linkedAccount.findUnique({
@@ -36,8 +38,8 @@ router.post("/codeforces/:accountId", authenticate, snapshotLimiter, async (req:
       linkedAccountId: account.id,
       rating: data.rating ?? null,
       rankTitle: data.rank ?? null,
-      problemsSolved: data.maxRating ?? null,
-      rawData: data,
+      problemsSolved: null, // see snapshot.job.ts: solved count comes in Phase 3
+      rawData: { ...data, maxRating: data.maxRating ?? null },
     },
   });
 

@@ -16,6 +16,8 @@ import { getMetricsText } from "./utils/metrics.js";
 import passport from "passport";
 import oauthRoutes from "./routes/oauth.routes.js";
 import helmet from "helmet";
+import { csrfProtection } from "./middleware/csrf.middleware.js";
+import { requireMetricsToken } from "./middleware/metrics.middleware.js";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -42,6 +44,15 @@ app.use(passport.initialize());
 // Rate limiting
 app.use(apiLimiter);
 
+// CSRF: Origin check on state-changing requests (cookie auth)
+app.use(csrfProtection);
+
+// Metrics (token protected; disabled unless METRICS_TOKEN is set)
+app.get("/metrics", requireMetricsToken, (_req, res) => {
+  res.setHeader("Content-Type", "text/plain; version=0.0.4");
+  res.send(getMetricsText());
+});
+
 // API Routes
 app.use("/auth", oauthRoutes);
 app.use("/auth", authRoutes);
@@ -51,13 +62,7 @@ app.use("/leaderboard", leaderboardRoutes);
 app.use("/groups", groupRoutes);
 app.use("/admin", adminRoutes);
 
-// Error handling
+// Error handling (must stay after all routes)
 app.use(errorHandler);
-
-// Metrics endpoint
-app.get("/metrics", (_req, res) => {
-  res.setHeader("Content-Type", "text/plain; version=0.0.4");
-  res.send(getMetricsText());
-});
 
 export default app;

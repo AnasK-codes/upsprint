@@ -19,6 +19,7 @@ model User {
   groups      GroupMember[]
   leaderboard Leaderboard?
   accounts    LinkedAccount[]
+  oauthCodes  OAuthCode[]
   leaderboardVisibility LeaderboardVisibility @default(GLOBAL_AND_GROUPS)
 
   @@index([batch])
@@ -91,6 +92,9 @@ model JobRun {
   status    String
   message   String?
   createdAt DateTime @default(now())
+  startedAt  DateTime @default(now())
+  finishedAt DateTime?
+  durationMs Int?
 }
 
 model Leaderboard {
@@ -114,4 +118,18 @@ model DailyActivity {
   linkedAccount   LinkedAccount @relation(fields: [linkedAccountId], references: [id])
 
   @@unique([linkedAccountId, date])
+}
+
+/// One-time codes handed to the frontend after Google sign-in. Only the SHA-256
+/// hash is stored; the code is single use and expires after ~60 seconds.
+model OAuthCode {
+  id        Int       @id @default(autoincrement())
+  codeHash  String    @unique
+  userId    Int
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
 }

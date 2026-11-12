@@ -39,7 +39,6 @@ export interface UserProfile {
 
 export interface AuthResponse {
   message: string;
-  token?: string;
   user?: UserProfile;
 }
 
@@ -81,17 +80,6 @@ async function request<T>(
     "Content-Type": "application/json",
   };
 
-  // Add Authorization header from cookie as fallback for cross-site cookie issues
-  if (typeof document !== "undefined") {
-    const token = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("token="))
-      ?.split("=")[1];
-    if (token) {
-      (headers as any)["Authorization"] = `Bearer ${token}`;
-    }
-  }
-
   const res = await fetch(`${API_BASE}${url}`, {
     ...options,
     headers,
@@ -118,6 +106,13 @@ export const api = {
     request<AuthResponse>("/auth/register", {
       method: "POST",
       body: JSON.stringify(data),
+    }),
+
+  /** Trade the one-time code from the Google redirect for the httpOnly auth cookie. */
+  exchangeOAuthCode: (code: string) =>
+    request<AuthResponse>("/auth/exchange", {
+      method: "POST",
+      body: JSON.stringify({ code }),
     }),
 
   logout: () =>
