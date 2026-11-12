@@ -16,11 +16,15 @@ import { getMetricsText } from "./utils/metrics.js";
 import passport from "passport";
 import oauthRoutes from "./routes/oauth.routes.js";
 import helmet from "helmet";
+import healthRoutes from "./routes/health.routes.js";
 import { csrfProtection } from "./middleware/csrf.middleware.js";
 import { requireMetricsToken } from "./middleware/metrics.middleware.js";
 
 const app = express();
 app.set("trust proxy", 1);
+
+// Health probes: registered first so they bypass CORS, rate limiting and CSRF.
+app.use(healthRoutes);
 
 // Use Helmet to set default security headers
 app.use(helmet());

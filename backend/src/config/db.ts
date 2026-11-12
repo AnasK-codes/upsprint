@@ -21,4 +21,15 @@ const prisma =
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
+/** Close Prisma and the underlying pg pool (used on graceful shutdown). */
+export async function closeDb(): Promise<void> {
+  await prisma.$disconnect();
+  // The adapter may already have closed the pool; ending twice throws.
+  try {
+    await pool.end();
+  } catch {
+    /* already closed */
+  }
+}
+
 export default prisma;
