@@ -1,7 +1,7 @@
 # UpSprint benchmarks
 
 Harness for measuring the **baseline** app (`baseline-v1`). Read [METHODOLOGY.md](METHODOLOGY.md) first:
-it lists the four app-code hooks and the rules for comparable numbers.
+it lists the five app-code hooks and the rules for comparable numbers.
 
 Contents: `docker-compose.bench.yml` (Postgres 16, 2 CPU / 2 GB, `pg_stat_statements`, port 5433),
 `mock-platforms/` (fake LeetCode / Codeforces / CodeChef), `seed/` (deterministic seeder),
@@ -75,3 +75,33 @@ Endpoints: `POST /graphql`, `GET /api/user.info?handles=`, `GET /users/:username
 ```bash
 npm run db:reset   # drops the volume and recreates an empty DB, then re-run steps 2 and 5
 ```
+
+## Measuring (Step 0.3)
+
+Prerequisites: everything above, k6 (`brew install k6`), and for M18 `cd benchmarks && npm install --save-dev lighthouse`
+(not installed automatically) plus Google Chrome.
+
+```bash
+./run-all.sh baseline 1000          # reseeds, runs everything, writes results/baseline/1000/summary.md
+QUICK=1 ./run-all.sh smoke 1000     # fast pipeline check, numbers not reportable
+```
+
+Knobs: `ANCHOR=YYYY-MM-DD`, `SEED_ARGS="--days=30 --snapshots-per-day=1 --yes"` (for 100k), `WARMUP_S`, `DURATION_S`,
+`COLD_DURATION_S`, `G500_DURATION_S`, `SYNC_SAMPLE` / `SYNC_FULL=1`, `SKIP_LIGHTHOUSE=1`, `FORCE=1` (overwrite a results dir).
+Results are plain files under `results/<label>/<users>/`: `summary.md`, `machine.txt`, `k6/*.json`, `explain/`, `sql/`, `logs/`, `rss.csv`, ...
+
+Individual pieces (API must be running via `scripts/api.sh start` and the mock via `npm run mock`):
+
+| Command | Metric |
+|---|---|
+| `npx tsx scripts/make-fixtures.ts` then `k6 run -e CACHE=miss k6/m1-leaderboard-global.js` | M1-M6, M9, M14 (see header comments for env) |
+| `npx tsx scripts/explain.ts out/` / `--pgss-only` | M7 |
+| `npx tsx scripts/time-rebuild.ts out.json` | M8 |
+| `npx tsx scripts/time-sync.ts out.json --sample=300` (needs `*_BASE_URL` set to the mock) | M10 |
+| `npx tsx scripts/table-sizes.ts out.json` | M12 |
+| `scripts/rss-sampler.sh .run/api.pid out.csv` | M13 |
+| `npx tsx scripts/rank-consistency.ts out.json` | M15 |
+| `./lighthouse.sh <label>` | M18 |
+| `JWT_SECRET=bench-secret npx tsx scripts/jwt.ts <userId>` | a Bearer token |
+
+`k6` runs with `MODE=cold` right after `scripts/api.sh restart` for cold numbers. The hooks and rules are in METHODOLOGY.md.
