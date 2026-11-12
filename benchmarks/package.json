@@ -1,0 +1,22 @@
+{
+  "name": "upsprint-benchmarks",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "db:up": "docker compose -f docker-compose.bench.yml up -d --wait",
+    "db:down": "docker compose -f docker-compose.bench.yml down",
+    "db:reset": "docker compose -f docker-compose.bench.yml down -v && npm run db:up",
+    "db:migrate": "cd ../backend && DATABASE_URL=postgresql://bench:bench@localhost:5433/upsprint_bench npx prisma migrate deploy",
+    "mock": "node mock-platforms/server.mjs",
+    "seed": "tsx seed/seed.ts",
+    "verify": "tsx mock-platforms/verify.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.16.0",
+    "lighthouse": "^13.6.0",
+    "pg": "^8.16.3",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3"
+  }
+}
