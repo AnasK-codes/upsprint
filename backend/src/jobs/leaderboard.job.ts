@@ -5,6 +5,8 @@ import {
 } from "../services/leaderboard.service.js";
 import { clearCachePrefix } from "../utils/cache.js";
 import logger from "../utils/logger.js";
+import { competitionRanks } from "../utils/ranking.js";
+import { recordJobRun } from "./jobRun.js";
 import { incCounter, setGauge } from "../utils/metrics.js";
 
 /** Simple platform weights (tweakable) */
@@ -31,6 +33,14 @@ const PLATFORM_WEIGHTS: Record<string, number> = {
  * @returns Stats about the rebuild (users ranked, duration).
  */
 export async function rebuildLeaderboard() {
+  return recordJobRun(
+    "leaderboard",
+    () => rebuildLeaderboardInner(),
+    (r) => `${r.totalUsers} users ranked`
+  );
+}
+
+async function rebuildLeaderboardInner() {
   const start = Date.now();
   incCounter("leaderboard_rebuild_runs", "Number of times leaderboard rebuild ran");
   try {
@@ -53,16 +63,35 @@ export async function rebuildLeaderboard() {
       userId,
       score,
     }));
-    rows.sort((a, b) => b.score - a.score);
+    // Deterministic order: best score first, then lowest userId.
+    rows.sort((a, b) => b.score - a.score || a.userId - b.userId);
+
+    // Ranks are what a viewer sees: standard competition ranking (1,2,2,4)
+    // over users who appear on the public leaderboard. GROUPS_ONLY users are
+    // never listed, so they don't take up ranks; they are stored with rank 0.
+    const hidden = new Set(
+      (
+        await prisma.user.findMany({
+          where: { leaderboardVisibility: "GROUPS_ONLY" },
+          select: { id: true },
+        })
+      ).map((u) => u.id)
+    );
+    const visibleRows = rows.filter((r) => !hidden.has(r.userId));
+    const visibleRanks = competitionRanks(visibleRows, (r) => r.score);
+    const entries = [
+      ...visibleRows.map((r, i) => ({ ...r, rank: visibleRanks[i] })),
+      ...rows.filter((r) => hidden.has(r.userId)).map((r) => ({ ...r, rank: 0 })),
+    ];
 
     // Build all createMany batch operations upfront
     const BATCH = 200;
     const createBatches = [];
-    for (let i = 0; i < rows.length; i += BATCH) {
-      const batchData = rows.slice(i, i + BATCH).map((row, idx) => ({
+    for (let i = 0; i < entries.length; i += BATCH) {
+      const batchData = entries.slice(i, i + BATCH).map((row) => ({
         userId: row.userId,
         score: row.score,
-        rank: i + idx + 1,
+        rank: row.rank,
       }));
       createBatches.push(prisma.leaderboard.createMany({ data: batchData }));
     }

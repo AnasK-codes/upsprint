@@ -3,6 +3,7 @@ import { fetchCodeforcesUser } from "../services/codeforces.service.js";
 import { fetchLeetCodeProfile } from "../services/leetcode.service.js";
 import { fetchCodeChefProfile } from "../services/codechef.service.js";
 import logger from "../utils/logger.js";
+import { recordJobRun } from "./jobRun.js";
 
 /**
  * Ingests a snapshot for a single linked account.
@@ -24,8 +25,10 @@ export async function processAccountSnapshot(acc: any) {
           linkedAccountId: acc.id,
           rating: data.rating ?? null,
           rankTitle: data.rank ?? null,
-          problemsSolved: data.maxRating ?? null,
-          rawData: data,
+          // Codeforces exposes no solved count here; maxRating is kept in rawData.
+          // A real solved count arrives in Phase 3.
+          problemsSolved: null,
+          rawData: { ...data, maxRating: data.maxRating ?? null },
         },
       });
       logger.info(`Processed Codeforces snapshot for ${acc.username}`);
@@ -205,8 +208,15 @@ export async function processAccountSnapshot(acc: any) {
 }
 
 export async function runAllSnapshots() {
-  const accounts = await prisma.linkedAccount.findMany();
-  for (const acc of accounts) {
-    await processAccountSnapshot(acc);
-  }
+  return recordJobRun(
+    "snapshot",
+    async () => {
+      const accounts = await prisma.linkedAccount.findMany();
+      for (const acc of accounts) {
+        await processAccountSnapshot(acc);
+      }
+      return { accounts: accounts.length };
+    },
+    (r) => `${r.accounts} accounts processed`
+  );
 }

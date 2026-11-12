@@ -10,17 +10,8 @@ export const authenticate = (
   res: Response,
   next: NextFunction
 ) => {
-  let token = "";
-
-  // Check header
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    token = authHeader.split(" ")[1];
-  }
-  // Check cookie
-  else if (req.cookies?.token) {
-    token = req.cookies.token;
-  }
+  // The JWT lives only in the httpOnly cookie.
+  const token: string = req.cookies?.token || "";
 
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });

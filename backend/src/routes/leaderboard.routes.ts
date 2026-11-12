@@ -11,32 +11,13 @@ import { getCache, setCache, clearCachePrefix } from "../utils/cache.js";
 import { VALID_BRANCHES, VALID_PLATFORMS } from "../utils/constants.js";
 import { strictLimiter } from "../middleware/rateLimit.middleware.js";
 import { requireAdmin } from "../middleware/admin.middleware.js";
+import { competitionRanks } from "../utils/ranking.js";
+import { validate } from "../middleware/validate.middleware.js";
+import { leaderboardFiltersQuery, topNParams, userIdParams } from "../validation/schemas.js";
 
 const router = Router();
 
-const validateFilters = (req: any, res: any, next: any) => {
-  const { batch, branch, platform } = req.query;
-
-  if (batch && batch !== "All") {
-    if (!/^\d{4}$/.test(String(batch))) {
-      return res.status(400).json({ message: "Invalid batch year" });
-    }
-  }
-
-  if (branch && branch !== "All") {
-    if (!VALID_BRANCHES.includes(String(branch))) {
-      return res.status(400).json({ message: "Invalid branch" });
-    }
-  }
-
-  if (platform && platform !== "All" && platform !== "all") {
-    if (!VALID_PLATFORMS.includes(String(platform).toLowerCase())) {
-      return res.status(400).json({ message: "Invalid platform" });
-    }
-  }
-
-  next();
-};
+const validateFilters = validate({ query: leaderboardFiltersQuery });
 
 const getCacheKey = (type: string, query: any) => {
   const { batch, branch, platform } = query;
@@ -90,7 +71,7 @@ router.get("/daily-activity", validateFilters, async (req, res) => {
 /**
  * GET /leaderboard/daily-activity/top/:n
  */
-router.get("/daily-activity/top/:n", async (req, res) => {
+router.get("/daily-activity/top/:n", validate({ params: topNParams }), async (req, res) => {
   try {
     const n = Math.min(100, Number(req.params.n) || 10);
     const cacheKey = `leaderboard:daily-activity:top:${n}`;
@@ -140,7 +121,7 @@ router.get("/leetcode", validateFilters, async (req, res) => {
 /**
  * GET /leaderboard/leetcode/top/:n
  */
-router.get("/leetcode/top/:n", async (req, res) => {
+router.get("/leetcode/top/:n", validate({ params: topNParams }), async (req, res) => {
   try {
     const n = Math.min(100, Number(req.params.n) || 10);
     const cacheKey = `leaderboard:leetcode:top:${n}`;
@@ -217,7 +198,7 @@ router.get("/", validateFilters, async (req, res) => {
 
     const rows = await prisma.leaderboard.findMany({
       where,
-      orderBy: { rank: "asc" },
+      orderBy: [{ score: "desc" }, { userId: "asc" }],
       skip,
       take: limit,
       include: {
@@ -225,9 +206,24 @@ router.get("/", validateFilters, async (req, res) => {
       },
     });
 
+    // Rank semantics: standard competition ranking (1,2,2,4) among users who are
+    // visible on the global board. With batch/branch filters the rank is the
+    // position within the filtered list (not the global rank); without filters
+    // it equals Leaderboard.rank, i.e. what /leaderboard/user/:id returns.
+    // A page that starts mid-list may begin inside a tie group, so the first
+    // row's rank is 1 + the number of rows strictly ahead of it.
+    let firstRank = skip + 1;
+    if (skip > 0 && rows.length > 0) {
+      const ahead = await prisma.leaderboard.count({
+        where: { AND: [where, { score: { gt: rows[0].score } }] },
+      });
+      firstRank = ahead + 1;
+    }
+    const ranks = competitionRanks(rows, (r) => r.score, skip, firstRank);
+
     const data = rows.map((row, index) => ({
       ...row,
-      rank: skip + index + 1,
+      rank: ranks[index],
       scoreType: "normalized"
     }));
 
@@ -244,7 +240,7 @@ router.get("/", validateFilters, async (req, res) => {
  * GET /leaderboard/top/:n
  * Cached for a short TTL
  */
-router.get("/top/:n", async (req, res) => {
+router.get("/top/:n", validate({ params: topNParams }), async (req, res) => {
   try {
     const n = Math.min(100, Number(req.params.n) || 10);
     const cacheKey = `leaderboard:top:${n}`;
@@ -257,14 +253,15 @@ router.get("/top/:n", async (req, res) => {
           leaderboardVisibility: "GLOBAL_AND_GROUPS",
         } as any,
       },
-      orderBy: { rank: "asc" },
+      orderBy: [{ score: "desc" }, { userId: "asc" }],
       take: n,
       include: { user: { select: { id: true, name: true } } },
     });
 
+    const topRanks = competitionRanks(data, (r) => r.score);
     const mapped = data.map((row, index) => ({
       ...row,
-      rank: index + 1,
+      rank: topRanks[index],
     }));
 
     setCache(cacheKey, mapped, 30); // 30s TTL
@@ -278,7 +275,7 @@ router.get("/top/:n", async (req, res) => {
 /**
  * GET /leaderboard/user/:userId
  */
-router.get("/user/:userId", async (req, res) => {
+router.get("/user/:userId", validate({ params: userIdParams }), async (req, res) => {
   try {
     const userId = Number(req.params.userId);
     const row = await prisma.leaderboard.findFirst({

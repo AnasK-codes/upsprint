@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import prisma from "../config/db.js";
+import { competitionRanks } from "../utils/ranking.js";
 
 
 /**
@@ -101,7 +102,10 @@ export async function getLeetCodeLeaderboard(
       ps.rating,
       ps."problemsSolved",
       ps."rankTitle",
-      la.username as "handle"
+      la.username as "handle",
+      RANK() OVER (
+        ORDER BY ps.rating DESC NULLS LAST, ps."problemsSolved" DESC NULLS LAST
+      ) AS "rnk"
     FROM "PlatformSnapshot" ps
     JOIN "LinkedAccount" la ON la.id = ps."linkedAccountId"
     JOIN "User" u ON u.id = la."userId"
@@ -124,9 +128,9 @@ export async function getLeetCodeLeaderboard(
 
 
   // Map to LeaderboardEntry structure expected by frontend
-  const mapped = (rows as any[]).map((row, index) => ({
+  const mapped = (rows as any[]).map((row) => ({
     id: row.userId, // Use userId as the row ID
-    rank: skip + index + 1,
+    rank: Number(row.rnk),
     score: row.rating || 0,
     user: {
       id: row.userId,
@@ -165,7 +169,10 @@ export async function getPlatformLeaderboard(
       ps.rating,
       ps."problemsSolved",
       ps."rankTitle",
-      la.username as "handle"
+      la.username as "handle",
+      RANK() OVER (
+        ORDER BY ps.rating DESC NULLS LAST, ps."problemsSolved" DESC NULLS LAST
+      ) AS "rnk"
     FROM "PlatformSnapshot" ps
     JOIN "LinkedAccount" la ON la.id = ps."linkedAccountId"
     JOIN "User" u ON u.id = la."userId"
@@ -186,9 +193,9 @@ export async function getPlatformLeaderboard(
   `;
 
   // Map to common structure
-  const mapped = (rows as any[]).map((row, index) => ({
+  const mapped = (rows as any[]).map((row) => ({
     id: row.userId,
-    rank: skip + index + 1,
+    rank: Number(row.rnk),
     score: row.rating || 0,
     scoreType: platformName,
     user: {
@@ -214,20 +221,23 @@ export async function getDailyActivityLeaderboard(
   const skip = (page - 1) * limit;
   const platform = filters?.platform?.toLowerCase() || "leetcode";
 
+  const where: any = {
+    platform: platform === "all" ? undefined : platform,
+    totalActiveDays: { gt: 0 },
+    user: {
+      batch: filters?.batch,
+      branch: filters?.branch,
+      leaderboardVisibility: "GLOBAL_AND_GROUPS",
+    },
+  };
+
   // Fetch accounts ordered by streak
   const rows = await prisma.linkedAccount.findMany({
-    where: {
-      platform: platform === "all" ? undefined : platform,
-      totalActiveDays: { gt: 0 },
-      user: {
-        batch: filters?.batch,
-        branch: filters?.branch,
-        leaderboardVisibility: "GLOBAL_AND_GROUPS",
-      } as any,
-    },
+    where,
     orderBy: [
       { currentStreak: "desc" },
-      { totalActiveDays: "desc" }
+      { totalActiveDays: "desc" },
+      { id: "asc" },
     ],
     skip,
     take: limit,
@@ -242,8 +252,31 @@ export async function getDailyActivityLeaderboard(
     }
   });
 
+  // Standard competition ranking on (streak, total days). When the page starts
+  // mid-list, the first row may tie with rows on earlier pages, so its rank is
+  // 1 + the number of rows strictly ahead of it.
+  let firstRank = skip + 1;
+  if (skip > 0 && rows.length > 0) {
+    const first = rows[0];
+    const ahead = await prisma.linkedAccount.count({
+      where: {
+        AND: [
+          where,
+          {
+            OR: [
+              { currentStreak: { gt: first.currentStreak } },
+              { currentStreak: first.currentStreak, totalActiveDays: { gt: first.totalActiveDays } },
+            ],
+          },
+        ],
+      },
+    });
+    firstRank = ahead + 1;
+  }
+  const ranks = competitionRanks(rows, (r) => `${r.currentStreak}:${r.totalActiveDays}`, skip, firstRank);
+
   return rows.map((row: any, index) => ({
-    rank: skip + index + 1,
+    rank: ranks[index],
     user: row.user,
     currentStreak: row.currentStreak,
     totalActiveDays: row.totalActiveDays,

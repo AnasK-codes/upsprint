@@ -1,4 +1,5 @@
 import axios from "axios";
+import { HTTP_TIMEOUT_MS, USER_AGENT } from "../utils/http.js";
 
 const LEETCODE_GRAPHQL_URL = "https://leetcode.com/graphql";
 
@@ -34,10 +35,10 @@ export const fetchLeetCodeProfile = async (username: string) => {
         variables: { username },
       },
       {
+        timeout: HTTP_TIMEOUT_MS,
         headers: {
           "Content-Type": "application/json",
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+          "User-Agent": USER_AGENT,
         },
       }
     );
